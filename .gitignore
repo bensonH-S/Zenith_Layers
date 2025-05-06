@@ -1,0 +1,24 @@
+# Ignorar a pasta Build
+/build/
+
+# Ignorar a pasta Dist
+/dist/
+
+# Ignorar arquivo spec
+*.spec
+
+# Ignorar icone
+*.icon
+
+# Ignorar pasta venv
+/venv
+
+# Ignorar arquivo .env
+.env
+
+# Ignorar arquivo de teste
+teste_deepseek.py
+
+# Ignorar pastas pycahce
+app/__pycache__/
+database/__pycache__/

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel - Zenith IA</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #EEECE8;
+            color: #040C42;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        #particles-js {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 250px;
+            background: #040C42;
+            padding: 30px 15px;
+            z-index: 1;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .sidebar .logo {
+            position: relative;
+            width: 100%;
+            max-width: 220px;
+            height: 80px; /* Ajuste conforme o tamanho da sua logo */
+            margin: 0 auto 40px;
+            background-image: url('/static/images/logo.svg');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        .sidebar .logo img {
+            width: 100%;
+            height: 100%;
+            display: block;
+            transition: transform 0.3s ease;
+            opacity: 1;
+        }
+
+        .sidebar .logo img:hover {
+            transform: scale(1.05);
+        }
+
+        .sidebar .nav-link {
+            color: #EEECE8;
+            display: block;
+            padding: 12px 15px;
+            transition: background 0.3s, color 0.3s, transform 0.3s;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .sidebar .nav-link i {
+            margin-right: 10px;
+        }
+
+        .sidebar .nav-link:hover {
+            color: #EEECE8;
+            background: #BC7201;
+            transform: translateX(5px);
+        }
+
+        .main-content {
+            margin-left: 250px;
+            padding: 40px;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background: rgba(4, 12, 66, 0.05);
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transform: translateY(50px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .container.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        h2 {
+            font-weight: 700;
+            color: #040C42;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-size: 2.5rem;
+            text-shadow: 0 0 8px rgba(188, 114, 1, 0.2);
+        }
+
+        p {
+            font-size: 1.2rem;
+            color: #040C42;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+
+            .container {
+                margin: 0;
+                padding: 1.5rem;
+            }
+
+            h2 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="particles-js"></div>
+
+    <div class="sidebar">
+        <div class="logo">
+            <img src="/static/images/logo.svg" alt="Zenith IA Logo">
+        </div>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link" href="/treinar_ia">
+                    <i class="bi bi-gear"></i> Treinar Modelo
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/publicar">
+                    <i class="bi bi-upload"></i> Publicar
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/relatorios">
+                    <i class="bi bi-bar-chart"></i> Relatórios
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/configuracoes">
+                    <i class="bi bi-sliders"></i> Configurações
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/logout">
+                    <i class="bi bi-box-arrow-right"></i> Sair
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="container">
+            <h2>Bem-vindo ao Painel, {{ usuario.nome }}!</h2>
+            <p>Aqui você pode gerenciar seus agentes de IA, treinar modelos e visualizar relatórios.</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        particlesJS('particles-js', {
+            particles: {
+                number: { value: 80, density: { enable: true, value_area: 800 } },
+                color: { value: '#BC7201' },
+                shape: { type: 'circle' },
+                opacity: { value: 0.5, random: true },
+                size: { value: 3, random: true },
+                line_linked: {
+                    enable: true,
+                    distance: 150,
+                    color: '#040C42',
+                    opacity: 0.4,
+                    width: 1
+                },
+                move: { enable: true, speed: 2, direction: 'none', random: true }
+            },
+            interactivity: {
+                events: { onhover: { enable: true, mode: 'repulse' } }
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.querySelector('.container');
+            container.classList.add('visible');
+        });
+    </script>
+</body>
+</html>
