@@ -1,290 +1,275 @@
-# Importa o Blueprint pra organizar as rotas da aplicação de forma modular
-from flask import Blueprint, request, jsonify
-# Importa a função pra gerar hash de senhas de forma segura
-from werkzeug.security import generate_password_hash
-# Importa a função connect_db pra conectar ao banco de dados
-from database.connection import connect_db
-# Importa bibliotecas pra fazer requisições à API do DeepSeek e carregar variáveis do .env
+# Importa o Blueprint para organizar as rotas da aplicação de forma modular
+from flask import Blueprint, request, jsonify, render_template, redirect, url_for
+# Importa bibliotecas para fazer requisições à API do DeepSeek e carregar variáveis do .env
 import requests
 import os
-# Importa o Client da Twilio pra enviar mensagens
+# Importa o Client da Twilio para enviar mensagens
 from twilio.rest import Client
+# Importa funções e classes do Flask-Login para gerenciar autenticação
+from flask_login import login_required, current_user, login_user, logout_user
+# Importa funções do models.py para manipulação de dados
+from app.models import Usuario, registrar_usuario, login_usuario, login_usuario_web, cadastrar_usuario_empresa
 
-
-# Cria um blueprint chamado 'main' pra agrupar as rotas da aplicação
+# Cria um blueprint chamado 'main' para agrupar as rotas da aplicação
 main = Blueprint('main', __name__)
 
-# Rota pra registrar um usuário via API (recebe dados em formato JSON)
+# Função para chamar a API do DeepSeek-V3
+def call_deepseek_api(message):
+    """Chama a API do DeepSeek-V3 para processar uma mensagem.
+
+    Args:
+        message (str): Mensagem a ser processada pela API.
+
+    Returns:
+        str: Resposta da API ou mensagem de erro.
+    """
+    api_key = os.getenv("DEEPSEEK_API_KEY")
+    if not api_key:
+        return "Erro: Chave de API do DeepSeek não encontrada no .env"
+    endpoint = "https://api.deepseek.com/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "model": "deepseek-chat",
+        "messages": [
+            {"role": "system", "content": "Você é um assistente prestativo."},
+            {"role": "user", "content": message}
+        ],
+        "max_tokens": 150,
+        "temperature": 0.7,
+        "stream": False
+    }
+    response = requests.post(endpoint, json=payload, headers=headers)
+    if response.status_code == 200:
+        return response.json().get('choices')[0].get('message').get('content')
+    else:
+        return f"Erro na API: {response.status_code} - {response.json()}"
+
+# Rota para registrar um usuário via API (recebe dados em formato JSON)
 @main.route('/registro', methods=['POST'])
-def registrar_usuario():
-    # Pega os dados enviados no corpo da requisição (em JSON)
+def registrar_usuario_route():
+    """Registra um novo usuário via API.
+
+    Recebe dados em JSON (nome, email, senha) e registra o usuário no banco de dados.
+
+    Returns:
+        JSON: Mensagem de sucesso ou erro.
+    """
     data = request.json
-    # Extrai os campos nome, email e senha do JSON
     nome = data.get('nome')
     email = data.get('email')
     senha = data.get('senha')
 
-    # Verifica se todos os campos obrigatórios foram preenchidos
+    # Valida se todos os campos obrigatórios foram preenchidos
     if not all([nome, email, senha]):
-        # Retorna um erro 400 (Bad Request) se algum campo estiver faltando
         return jsonify({'erro': 'Todos os campos são obrigatórios'}), 400
 
-    # Gera um hash seguro da senha pra armazenar no banco (não armazena a senha em texto puro)
-    senha_hash = generate_password_hash(senha)
-
-    # Inicializa as variáveis de conexão e cursor como None (pra garantir que serão fechadas no finally)
-    conn = None
-    cursor = None
-
-    try:
-        # Conecta ao banco de dados
-        conn = connect_db()
-        # Cria um cursor pra executar comandos SQL
-        cursor = conn.cursor()
-        # Insere o novo usuário na tabela 'usuarios'
-        cursor.execute("""
-            INSERT INTO usuarios (nome, email, senha_hash)
-            VALUES (%s, %s, %s)
-        """, (nome, email, senha_hash))
-        # Confirma a transação no banco de dados
-        conn.commit()
-        # Retorna uma mensagem de sucesso com status 201 (Created)
+    # Chama a função do modelo para registrar o usuário
+    sucesso = registrar_usuario(nome, email, senha)
+    if sucesso:
         return jsonify({'mensagem': 'Usuário registrado com sucesso!'}), 201
+    else:
+        return jsonify({'erro': 'Erro ao registrar usuário'}), 500
 
-    except Exception as e:
-        # Retorna um erro 500 (Internal Server Error) se algo der errado
-        return jsonify({'erro': str(e)}), 500
-
-    finally:
-        # Garante que o cursor e a conexão sejam fechados, mesmo se houver erro
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
-
-# Importa a função pra verificar o hash da senha durante o login
-from werkzeug.security import check_password_hash
-
-# Rota pra login de usuário via API (recebe dados em formato JSON)
+# Rota para login de usuário via API (recebe dados em formato JSON)
 @main.route('/login', methods=['POST'])
-def login_usuario():
-    # Pega os dados enviados no corpo da requisição (em JSON)
+def login_usuario_route():
+    """Autentica um usuário via API.
+
+    Recebe email e senha em JSON, verifica as credenciais e retorna mensagem de sucesso ou erro.
+
+    Returns:
+        JSON: Mensagem de sucesso ou erro.
+    """
     data = request.json
-    # Extrai os campos email e senha do JSON
     email = data.get('email')
     senha = data.get('senha')
 
-    # Verifica se os campos obrigatórios foram preenchidos
+    # Valida se os campos obrigatórios foram preenchidos
     if not all([email, senha]):
-        # Retorna um erro 400 (Bad Request) se algum campo estiver faltando
         return jsonify({'erro': 'Email e senha são obrigatórios'}), 400
 
-    # Inicializa as variáveis de conexão e cursor como None
-    conn = None
-    cursor = None
+    # Chama a função do modelo para autenticar o usuário
+    usuario = login_usuario(email, senha)
+    if not usuario:
+        return jsonify({'erro': 'Usuário não encontrado ou senha incorreta'}), 401
 
-    try:
-        # Conecta ao banco de dados
-        conn = connect_db()
-        # Cria um cursor que retorna os resultados como dicionários
-        cursor = conn.cursor(dictionary=True)
-        # Busca o usuário pelo e-mail
-        cursor.execute("SELECT * FROM usuarios WHERE email = %s", (email,))
-        # Pega o primeiro resultado (deve ser único, já que o e-mail é único)
-        usuario = cursor.fetchone()
+    return jsonify({'mensagem': f"Bem-vindo, {usuario['nome']}!"}), 200
 
-        # Verifica se o usuário foi encontrado
-        if not usuario:
-            # Retorna um erro 404 (Not Found) se o usuário não existir
-            return jsonify({'erro': 'Usuário não encontrado'}), 404
-
-        # Verifica se a senha fornecida corresponde ao hash armazenado
-        if not check_password_hash(usuario['senha_hash'], senha):
-            # Retorna um erro 401 (Unauthorized) se a senha estiver incorreta
-            return jsonify({'erro': 'Senha incorreta'}), 401
-
-        # Retorna uma mensagem de sucesso com status 200 (OK)
-        return jsonify({'mensagem': f"Bem-vindo, {usuario['nome']}!"}), 200
-
-    except Exception as e:
-        # Retorna um erro 500 (Internal Server Error) se algo der errado
-        return jsonify({'erro': str(e)}), 500
-
-    finally:
-        # Garante que o cursor e a conexão sejam fechados
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
-
-# Importa funções pra renderizar templates e redirecionar
-from flask import render_template, redirect, url_for
-
-# Rota pra exibir a página de login (método GET)
+# Rota para exibir a página de login (método GET)
 @main.route('/login', methods=['GET'])
 def login_page():
-    # Renderiza o template login.html (exibe a página de login pro usuário)
+    """Exibe a página de login.
+
+    Returns:
+        HTML: Template login.html renderizado.
+    """
     return render_template('login.html')
 
-# Importa a função login_user pra autenticar usuários e a classe Usuario
-from flask_login import login_user
-from app.models import Usuario
-
-# Rota pra login via formulário web (método POST)
+# Rota para login via formulário web (método POST)
 @main.route('/login-web', methods=['POST'])
 def login_web():
-    # Pega os dados enviados pelo formulário (e-mail e senha)
+    """Autentica um usuário via formulário web e redireciona para o painel.
+
+    Recebe email e senha do formulário, autentica o usuário e inicia a sessão.
+
+    Returns:
+        Redireciona para o painel ou retorna mensagem de erro.
+    """
     email = request.form.get('email')
     senha = request.form.get('senha')
 
-    # Conecta ao banco de dados
-    conn = connect_db()
-    # Cria um cursor que retorna os resultados como dicionários
-    cursor = conn.cursor(dictionary=True)
-    # Busca o usuário pelo e-mail
-    cursor.execute("SELECT * FROM usuarios WHERE email = %s", (email,))
-    # Pega o primeiro resultado
-    usuario = cursor.fetchone()
-    # Fecha o cursor e a conexão
-    cursor.close()
-    conn.close()
-
-    # Verifica se o usuário existe e se a senha está correta
-    if usuario and check_password_hash(usuario['senha_hash'], senha):
-        # Cria um objeto Usuario com os dados do banco
-        user_obj = Usuario(
-            id=usuario['id'],
-            nome=usuario['nome'],
-            email=usuario['email'],
-            plano=usuario['plano']
-        )
-        # Autentica o usuário (inicia a sessão com Flask-Login)
+    # Chama a função do modelo para autenticar o usuário
+    user_obj = login_usuario_web(email, senha)
+    if user_obj:
         login_user(user_obj)
-        # Redireciona pra página do painel
         return redirect(url_for('main.painel'))
 
-    # Retorna uma mensagem de erro se o login falhar
     return "E-mail ou senha incorretos."
 
-# Importa funções pra lidar com formulários e templates
-from flask import render_template, request
-from werkzeug.security import generate_password_hash
-from database.connection import connect_db
-
-# Rota pra página de cadastro (métodos GET e POST)
+# Rota para página de cadastro (métodos GET e POST)
 @main.route('/cadastro', methods=['GET', 'POST'])
 def cadastro():
-    # Se o método for POST (formulário enviado)
+    """Gerencia o cadastro de usuários e empresas.
+
+    - GET: Exibe o formulário de cadastro.
+    - POST: Processa o formulário e cadastra o usuário e a empresa.
+
+    Returns:
+        HTML ou mensagem: Template cadastro.html (GET) ou mensagem de sucesso/erro (POST).
+    """
     if request.method == 'POST':
-        # Dados do usuário (extraídos do formulário)
-        nome = request.form['nome']
-        email = request.form['email']
-        senha = request.form['senha']
-        cpf = request.form['cpf']
-        data_nascimento = request.form['data_nascimento']
-        cep = request.form['cep']
-        endereco = request.form['endereco']
-        plano = request.form['plano']
-        # Gera um hash seguro da senha
-        senha_hash = generate_password_hash(senha)
+        # Dados do usuário extraídos do formulário
+        dados_usuario = {
+            'nome': request.form['nome'],
+            'email': request.form['email'],
+            'senha': request.form['senha'],
+            'cpf': request.form['cpf'],
+            'data_nascimento': request.form['data_nascimento'],
+            'cep': request.form['cep'],
+            'endereco': request.form['endereco'],
+            'plano': request.form['plano']
+        }
 
-        # Dados da empresa (extraídos do formulário)
-        razao_social = request.form['razao_social']
-        nome_fantasia = request.form['nome_fantasia']
-        cnpj = request.form['cnpj']
-        tipo_empresa = request.form['tipo_empresa']
-        telefone = request.form['telefone']
-        email_empresarial = request.form['email_empresarial']
-        inscricao_estadual = request.form['inscricao_estadual']
-        inscricao_municipal = request.form['inscricao_municipal']
+        # Dados da empresa extraídos do formulário
+        dados_empresa = {
+            'razao_social': request.form['razao_social'],
+            'nome_fantasia': request.form['nome_fantasia'],
+            'cnpj': request.form['cnpj'],
+            'tipo_empresa': request.form['tipo_empresa'],
+            'telefone': request.form['telefone'],
+            'email_empresarial': request.form['email_empresarial'],
+            'inscricao_estadual': request.form['inscricao_estadual'],
+            'inscricao_municipal': request.form['inscricao_municipal'],
+            'cep_empresa': request.form['cep_empresa'],
+            'endereco_empresa': request.form['endereco_empresa']
+        }
 
-        # Conecta ao banco de dados
-        conn = connect_db()
-        # Cria um cursor pra executar comandos SQL
-        cursor = conn.cursor()
+        # Chama a função do modelo para cadastrar usuário e empresa
+        sucesso, mensagem = cadastrar_usuario_empresa(dados_usuario, dados_empresa)
+        if sucesso:
+            return mensagem
+        else:
+            return mensagem
 
-        try:
-            # Insere o usuário na tabela 'usuarios'
-            cursor.execute("""
-                INSERT INTO usuarios (nome, email, senha_hash, cpf, data_nascimento, cep, endereco, plano)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-            """, (nome, email, senha_hash, cpf, data_nascimento, cep, endereco, plano))
-            # Confirma a transação
-            conn.commit()
-
-            # Pega o ID do usuário recém-inserido
-            usuario_id = cursor.lastrowid
-
-            # Insere a empresa vinculada ao usuário na tabela 'empresas'
-            cursor.execute("""
-                INSERT INTO empresas (usuario_id, razao_social, nome_fantasia, cnpj, tipo_empresa, cep, endereco, telefone, email_empresarial, inscricao_estadual, inscricao_municipal)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """, (usuario_id, razao_social, nome_fantasia, cnpj, tipo_empresa, cep, endereco, telefone, email_empresarial, inscricao_estadual, inscricao_municipal))
-            # Confirma a transação
-            conn.commit()
-
-            # Retorna uma mensagem de sucesso
-            return f"Cadastro realizado com sucesso para {nome} ({plano})!"
-
-        except Exception as e:
-            # Retorna uma mensagem de erro se algo der errado
-            return f"Erro: {str(e)}"
-
-        finally:
-            # Fecha o cursor e a conexão
-            cursor.close()
-            conn.close()
-
-    # Se o método for GET, renderiza o template cadastro.html
     return render_template('cadastro.html')
 
-# Importa decoradores e funções do Flask-Login pra gerenciar autenticação
-from flask_login import login_required, current_user
-
-# Rota pra página do painel (acessível apenas pra usuários autenticados)
+# Rota para página do painel (acessível apenas para usuários autenticados)
 @main.route('/painel')
 @login_required
 def painel():
-    # Renderiza o template painel.html, passando o usuário atual (current_user)
+    """Exibe o painel do usuário autenticado.
+
+    Returns:
+        HTML: Template painel.html renderizado com os dados do usuário.
+    """
     return render_template('painel.html', usuario=current_user)
 
-# Importa a função pra fazer logout
-from flask_login import logout_user
-
-# Rota pra logout (acessível apenas pra usuários autenticados)
+# Rota para logout (acessível apenas para usuários autenticados)
 @main.route('/logout')
 @login_required
 def logout():
-    # Faz o logout do usuário (limpa a sessão)
+    """Faz o logout do usuário e redireciona para a página de login.
+
+    Returns:
+        Redireciona para a página de login.
+    """
     logout_user()
-    # Redireciona pra página de login
     return redirect(url_for('main.login_page'))
 
-# Rota pra página inicial (Home)
+# Rota para página inicial (Home)
 @main.route('/')
 def home():
+    """Exibe a página inicial da aplicação.
+
+    Returns:
+        HTML: Template index.html renderizado.
+    """
     return render_template('index.html')
 
-# Rota pra página de planos
+# Rota para página de planos
 @main.route('/planos')
 def planos():
+    """Exibe a página de planos da aplicação.
+
+    Returns:
+        HTML: Template planos.html renderizado.
+    """
     return render_template('planos.html')
 
-# # Rota de teste pra verificar a integração com o DeepSeek-V3
-# @main.route('/test-deepseek', methods=['GET'])
-# def test_deepseek():
-#     message = "Quero saber mais sobre o plano Plus."
-#     response = call_deepseek_api(message)
-#     return jsonify({"response": response})
+# Rota de webhook para receber mensagens do WhatsApp via Twilio
+@main.route('/webhook', methods=['POST'])
+def webhook():
+    """Processa mensagens recebidas do WhatsApp via Twilio.
 
-# Rota pra página de treinamento de IA
+    Recebe mensagens, processa com a API DeepSeek e envia resposta de volta via Twilio.
+
+    Returns:
+        JSON: Status do processamento da mensagem.
+    """
+    data = request.form
+    message = data.get('Body', '')
+    sender = data.get('From', '').replace('whatsapp:', '')
+
+    if not message or not sender:
+        return jsonify({"status": "error", "message": "Missing message or sender"}), 400
+
+    response = call_deepseek_api(message)
+
+    account_sid = os.getenv("TWILIO_ACCOUNT_SID")
+    auth_token = os.getenv("TWILIO_AUTH_TOKEN")
+    if not account_sid or not auth_token:
+        return jsonify({"status": "error", "message": "Credenciais da Twilio não configuradas"}), 500
+
+    client = Client(account_sid, auth_token)
+    client.messages.create(
+        from_='whatsapp:+14155238886',
+        body=response,
+        to=f'whatsapp:{sender}'
+    )
+
+    return jsonify({"status": "success", "message": "Message processed"}), 200
+
+# Rota para página de treinamento de IA
 @main.route('/treinar_ia')
 @login_required
 def treinar_ia():
+    """Exibe a página de treinamento de IA para usuários autenticados.
+
+    Returns:
+        HTML: Template treinar_ia.html renderizado com os dados do usuário.
+    """
     return render_template('treinar_ia.html', usuario=current_user)
 
-# Rota pra página de configuração da persona da IA
+# Rota para página de configuração da persona da IA
 @main.route('/persona_ia')
 @login_required
 def persona_ia():
+    """Exibe a página de configuração da persona da IA para usuários autenticados.
+
+    Returns:
+        HTML: Template persona_ia.html renderizado com os dados do usuário.
+    """
     return render_template('persona_ia.html', usuario=current_user)
