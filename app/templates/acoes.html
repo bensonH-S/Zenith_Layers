@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ações - Zenith IA</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #EEECE8;
+            color: #040C42;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        #particles-js {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 250px;
+            background: #040C42;
+            padding: 30px 15px;
+            z-index: 10;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .sidebar .logo {
+            position: relative;
+            width: 100%;
+            max-width: 220px;
+            height: 80px;
+            margin: 0 auto 40px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        .sidebar .logo img {
+            width: 100%;
+            height: 100%;
+            display: block;
+            transition: transform 0.3s ease;
+            opacity: 1;
+        }
+
+        .sidebar .logo img:hover {
+            transform: scale(1.05);
+        }
+
+        .sidebar .nav-link {
+            color: #EEECE8;
+            display: block;
+            padding: 12px 15px;
+            transition: background 0.3s, color 0.3s, transform 0.3s;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .sidebar .nav-link i {
+            margin-right: 10px;
+        }
+
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            color: #EEECE8;
+            background: #BC7201;
+            transform: translateX(5px);
+        }
+
+        .main-content {
+            margin-left: 250px;
+            padding: 40px;
+            z-index: 5;
+            min-height: 100vh;
+        }
+
+        .upload-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+            padding: 20px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .upload-form h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .upload-form p {
+            font-size: 0.95rem;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .upload-form .form-group {
+            margin-bottom: 15px;
+        }
+
+        .upload-form label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .upload-form input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #040C42;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .upload-form button {
+            background: #BC7201;
+            color: #EEECE8;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: background 0.3s ease;
+            font-weight: 600;
+            align-self: flex-start;
+        }
+
+        .upload-form button:hover {
+            background: #A65D00;
+        }
+
+        .upload-form .template-button {
+            background: #BC7201;
+            color: #EEECE8;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            transition: background 0.3s ease;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .upload-form .template-button.json {
+            background: #BC7201;
+        }
+
+        .upload-form .template-button.json:hover {
+            background: #A65D00;
+        }
+
+        .upload-form .template-button.csv {
+            background: #040C42;
+        }
+
+        .upload-form .template-button.csv:hover {
+            background: #02082A;
+        }
+
+        .upload-form .load-data-button {
+            background: #BC7201;
+        }
+
+        .upload-form .load-data-button:hover {
+            background: #A65D00;
+        }
+
+        .template-buttons-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .template-buttons-container .template-button:last-child {
+            margin-left: auto;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            background: #f8f9fa;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            position: relative;
+            height: 24px;
+        }
+
+        .progress-bar {
+            width: 0;
+            height: 100%;
+            background: #BC7201;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .table-container {
+            margin-top: 20px;
+            overflow-x: auto;
+        }
+
+        .table-container table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .table-container th,
+        .table-container td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .table-container th {
+            background: #040C42;
+            color: #EEECE8;
+            font-weight: 600;
+        }
+
+        .table-container td {
+            font-size: 0.9rem;
+        }
+
+        .modal-content {
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            background: #040C42;
+            color: #EEECE8;
+            border-bottom: none;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+        }
+
+        .modal-title {
+            font-weight: 600;
+        }
+
+        .modal-body {
+            padding: 20px;
+            font-size: 0.95rem;
+            color: #040C42;
+        }
+
+        .modal-footer {
+            border-top: none;
+            padding: 15px 20px;
+        }
+
+        .modal-footer .btn-update {
+            background: #BC7201;
+            color: #EEECE8;
+            border: none;
+            transition: background 0.3s ease;
+        }
+
+        .modal-footer .btn-update:hover {
+            background: #A65D00;
+        }
+
+        .modal-footer .btn-ignore {
+            background: #040C42;
+            color: #EEECE8;
+            border: none;
+            transition: background 0.3s ease;
+        }
+
+        .modal-footer .btn-ignore:hover {
+            background: #02082A;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+
+            .template-buttons-container {
+                flex-wrap: wrap;
+            }
+
+            .template-buttons-container .template-button:last-child {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="particles-js"></div>
+
+    <div class="sidebar">
+        <div class="logo">
+            <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Zenith IA Logo">
+        </div>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'main.treinar_ia' else '' }}" href="{{ url_for('main.treinar_ia') }}">
+                    <i class="bi bi-robot"></i> Modelo Zenith
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'main.persona_ia' else '' }}" href="{{ url_for('main.persona_ia') }}">
+                    <i class="bi bi-person"></i> Persona Zenith
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'main.acoes' else '' }}" href="{{ url_for('main.acoes') }}">
+                    <i class="bi bi-gear"></i> Ações
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="bi bi-tools"></i> Ferramentas
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="bi bi-file-earmark-text"></i> Formulários
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'main.treinar_ia' else '' }}" href="{{ url_for('main.treinar_ia') }}">
+                    <i class="bi bi-chat"></i> Ensine Seu Agente
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('main.logout') }}">
+                    <i class="bi bi-box-arrow-right"></i> Sair
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="upload-form">
+            <h2>Ações - Importar Produtos</h2>
+            <p>Carregue seus produtos através de arquivos JSON ou CSV.</p>
+            <div class="form-group">
+                <label for="file-upload">Selecione o arquivo</label>
+                <input type="file" id="file-upload" accept=".json,.csv">
+            </div>
+            <div class="form-group">
+                <label>Baixar Templates</label>
+                <div class="template-buttons-container">
+                    <button id="download-json-template" class="template-button json">Template JSON</button>
+                    <button id="download-csv-template" class="template-button csv">Template CSV</button>
+                    <button id="load-data" class="template-button load-data-button">Carregar Dados</button>
+                </div>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progress-bar"><span id="progress-text">0%</span></div>
+            </div>
+            <div class="table-container" id="table-container" style="display: none;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Produto</th>
+                            <th>Valor Unitário</th>
+                            <th>Desconto</th>
+                            <th>Valor Venda</th>
+                            <th>Unidade Medida</th>
+                            <th>Quantidade</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para produtos duplicados -->
+    <div class="modal fade" id="duplicateModal" tabindex="-1" aria-labelledby="duplicateModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="duplicateModalLabel">Produtos Duplicados Encontrados</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Os seguintes produtos já estão registrados:</p>
+                    <ul id="duplicate-list" class="list-group"></ul>
+                    <p class="mt-3">Deseja atualizar os produtos existentes ou ignorar?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-update" id="update-duplicates">Atualizar</button>
+                    <button type="button" class="btn btn-ignore" data-bs-dismiss="modal">Ignorar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script>
+        particlesJS('particles-js', {
+            particles: {
+                number: { value: 80, density: { enable: true, value_area: 800 } },
+                color: { value: '#BC7201' },
+                shape: { type: 'circle' },
+                opacity: { value: 0.5, random: true },
+                size: { value: 3, random: true },
+                line_linked: {
+                    enable: true,
+                    distance: 150,
+                    color: '#040C42',
+                    opacity: 0.4,
+                    width: 1
+                },
+                move: { enable: true, speed: 2, direction: 'none', random: true }
+            },
+            interactivity: {
+                events: { onhover: { enable: true, mode: 'repulse' } }
+            }
+        });
+
+        toastr.options = {
+            closeButton: true,
+            progressBar: true,
+            positionClass: 'toast-top-right',
+            timeOut: 5000,
+            showMethod: 'fadeIn',
+            hideMethod: 'fadeOut',
+            toastClass: 'toast',
+            onShown: function() {
+                document.querySelectorAll('.toast').forEach(toast => {
+                    if (toast.classList.contains('toast-success')) {
+                        toast.style.backgroundColor = '#28a745';
+                        toast.style.color = '#ffffff';
+                    } else if (toast.classList.contains('toast-error')) {
+                        toast.style.backgroundColor = '#dc3545';
+                        toast.style.color = '#ffffff';
+                    } else if (toast.classList.contains('toast-warning')) {
+                        toast.style.backgroundColor = '#ffc107';
+                        toast.style.color = '#000000';
+                    }
+                });
+            }
+        };
+
+        const fileInput = document.getElementById('file-upload');
+        const loadButton = document.getElementById('load-data');
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+        const tableContainer = document.getElementById('table-container');
+        const tableBody = document.getElementById('table-body');
+        const downloadJsonButton = document.getElementById('download-json-template');
+        const downloadCsvButton = document.getElementById('download-csv-template');
+        const duplicateModal = new bootstrap.Modal(document.getElementById('duplicateModal'));
+        const duplicateList = document.getElementById('duplicate-list');
+        const updateDuplicatesButton = document.getElementById('update-duplicates');
+
+        const jsonTemplate = `[
+            {
+                "codigo": "COD001",
+                "produto": "Produto Exemplo",
+                "valor Uniário": 100.00,
+                "desconto": 10,
+                "unidade_medida": "un",
+                "quantidade": 5
+            }
+        ]`;
+
+        const csvTemplate = `"codigo","produto","valor_unitario","desconto","unidade_medida","quantidade"
+"COD001","Produto Exemplo",100.00,10,"un",5`;
+
+        function downloadText(content, fileName, contentType) {
+            const blob = new Blob([content], { type: contentType });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+
+        downloadJsonButton.addEventListener('click', () => {
+            downloadText(jsonTemplate, 'produtos_vendas_template.json', 'application/json');
+        });
+
+        downloadCsvButton.addEventListener('click', () => {
+            downloadText(csvTemplate, 'produtos_vendas_template.csv', 'text/csv');
+        });
+
+        function validateProduto(produto) {
+            const requiredFields = ['codigo', 'produto', 'valor_unitario', 'unidade_medida', 'quantidade'];
+            for (let field of requiredFields) {
+                if (!produto[field] && produto[field] !== 0) {
+                    throw new Error(`Campo ${field} é obrigatório para o produto ${produto.codigo || 'desconhecido'}.`);
+                }
+            }
+            return true;
+        }
+
+        let tempData = null;
+
+        loadButton.addEventListener('click', () => {
+            const file = fileInput.files[0];
+            if (!file) {
+                toastr.error('Nenhum arquivo selecionado.', 'Erro!');
+                return;
+            }
+
+            const extension = file.name.split('.').pop().toLowerCase();
+            if (extension !== 'json' && extension !== 'csv') {
+                toastr.error('Apenas arquivos JSON ou CSV são permitidos.', 'Erro!');
+                return;
+            }
+
+            resetProgress();
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    let data;
+                    if (extension === 'json') {
+                        data = JSON.parse(e.target.result);
+                        if (!Array.isArray(data)) {
+                            throw new Error('JSON deve conter um array de objetos.');
+                        }
+                        data = data.map(item => ({
+                            codigo: item.codigo || item.Codigo || '',
+                            produto: item.produto || item.Produto || '',
+                            valor_unitario: parseFloat(item.valor_unitario || item['Valor Unitário'] || 0),
+                            desconto: parseFloat(item.desconto || item.Desconto || 0),
+                            unidade_medida: item.unidade_medida || item['Unidade Medida'] || '',
+                            quantidade: parseInt(item.quantidade || item.Quantidade || 0, 10)
+                        }));
+                    } else if (extension === 'csv') {
+                        data = parseCSV(e.target.result);
+                    }
+
+                    data.forEach(produto => validateProduto(produto));
+
+                    tempData = data;
+                    console.log('Dados do arquivo (tempData):', tempData);
+
+                    sendDataToServer(data, false);
+                } catch (err) {
+                    toastr.error(`Erro ao processar o arquivo: ${err.message}`, 'Erro!');
+                    console.error('Erro no processamento do arquivo:', err);
+                    resetProgress();
+                }
+            };
+            reader.onerror = () => {
+                toastr.error('Erro ao ler o arquivo.', 'Erro!');
+                resetProgress();
+            };
+            reader.readAsText(file);
+        });
+
+        function sendDataToServer(data, update) {
+            $.ajax({
+                url: '{{ url_for("main.upload_produtos") }}',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ produtos: data, update: update }),
+                beforeSend: function() {
+                    console.log('Enviando dados:', { produtos: data, update: update });
+                },
+                success: function(response) {
+                    console.log('Resposta do servidor:', response);
+                    console.log('response.success:', response.success);
+                    console.log('response.data:', response.data);
+                    console.log('response.duplicates:', response.duplicates);
+                    if (response.duplicates && response.duplicates.length > 0) {
+                        showDuplicateModal(response.duplicates);
+                    } else if (response.success && response.data && Array.isArray(response.data)) {
+                        simulateProgress();
+                        toastr.success(response.message || 'Dados processados com sucesso!', 'Sucesso!');
+                        const hasValorVenda = response.data.every(item => item.valor_venda !== undefined && item.valor_venda !== null);
+                        if (!hasValorVenda) {
+                            toastr.warning('Valores de venda não retornados pelo servidor. Usando cálculo local (valor_unitario - desconto).', 'Aviso');
+                        }
+                        displayTable(response.data);
+                    } else if (response.success) {
+                        simulateProgress();
+                        toastr.warning('Dados do servidor não retornados. Exibindo dados do arquivo com cálculo local de valor_venda.', 'Aviso');
+                        toastr.success(response.message || 'Produtos processados com sucesso!', 'Sucesso!');
+                        displayTable(data);
+                    } else {
+                        console.warn('Resposta do servidor inválida:', response);
+                        toastr.error(response.message || 'Erro ao processar dados no servidor.', 'Erro');
+                        simulateProgress();
+                        displayTable(data);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Erro AJAX:', xhr.responseText, status, error);
+                    toastr.error('Erro ao conectar ao servidor. Exibindo dados do arquivo.', 'Erro');
+                    simulateProgress();
+                    displayTable(data);
+                }
+            });
+        }
+
+        function showDuplicateModal(duplicates) {
+            duplicateList.innerHTML = '';
+            duplicates.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item';
+                let codigo, produto;
+                if (typeof item === 'string') {
+                    codigo = item || 'Desconhecido';
+                    const tempItem = tempData.find(product => product.codigo === item);
+                    produto = tempItem && tempItem.produto ? tempItem.produto : 'Nome não disponível';
+                } else {
+                    codigo = item.codigo || 'Desconhecido';
+                    produto = item.produto || 'Nome não disponível';
+                }
+                li.textContent = `${codigo} - ${produto}`;
+                duplicateList.appendChild(li);
+            });
+            duplicateModal.show();
+
+            updateDuplicatesButton.onclick = () => {
+                duplicateModal.hide();
+                sendDataToServer(tempData, true);
+            };
+        }
+
+        function simulateProgress() {
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 10;
+                progressBar.style.width = `${progress}%`;
+                progressText.textContent = `${progress}%`;
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    document.querySelector('.progress-bar-container').style.display = 'none';
+                }
+            }, 100);
+        }
+
+        function resetProgress() {
+            progressBar.style.width = '0%';
+            progressText.textContent = '0%';
+            document.querySelector('.progress-bar-container').style.display = 'block';
+            tableContainer.style.display = 'none';
+        }
+
+        function parseCSV(csv) {
+            const lines = csv.split('\n').filter(line => line.trim() !== '');
+            if (lines.length === 0) {
+                throw new Error('Arquivo CSV vazio.');
+            }
+
+            const parseLine = (line) => {
+                const result = [];
+                let current = '';
+                let inQuotes = false;
+
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    if (char === '"') {
+                        inQuotes = !inQuotes;
+                    } else if (char === ',' && !inQuotes) {
+                        result.push(current.trim());
+                        current = '';
+                    } else {
+                        current += char;
+                    }
+                }
+                result.push(current.trim());
+                return result;
+            };
+
+            const headers = parseLine(lines[0]).map(header => header.replace(/"/g, '').trim());
+            const data = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                const values = parseLine(lines[i]).map(value => value.replace(/"/g, '').trim());
+                const row = {};
+                headers.forEach((header, index) => {
+                    row[header] = values[index] || '';
+                });
+                data.push({
+                    codigo: row.codigo || row.Codigo || '',
+                    produto: row.produto || row.Produto || '',
+                    valor_unitario: parseFloat(row.valor_unitario || row['Valor Unitário'] || 0),
+                    desconto: parseFloat(row.desconto || row.Desconto || 0),
+                    unidade_medida: row.unidade_medida || row['Unidade Medida'] || '',
+                    quantidade: parseInt(row.quantidade || row.Quantidade || 0, 10)
+                });
+            }
+            return data;
+        }
+
+        function formatCurrency(value) {
+            const num = parseFloat(value);
+            if (isNaN(num)) return '';
+            return num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+
+        function formatPercentage(value) {
+            const num = parseFloat(value);
+            if (isNaN(num)) return '';
+            return `${num.toFixed(0)}%`;
+        }
+
+        function displayTable(data) {
+            console.log('Dados da tabela:', data);
+            console.log('Valores de venda:', data.map(item => item.valor_venda || (item.valor_unitario - item.desconto)));
+            tableBody.innerHTML = '';
+            if (!data || data.length === 0) {
+                toastr.error('Nenhum dado para exibir.', 'Erro!');
+                tableContainer.style.display = 'none';
+                return;
+            }
+
+            data.forEach(item => {
+                const valorVenda = item.valor_venda !== undefined && item.valor_venda !== null 
+                    ? item.valor_venda 
+                    : item.valor_unitario - item.desconto;
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.codigo || ''}</td>
+                    <td>${item.produto || ''}</td>
+                    <td>${formatCurrency(item.valor_unitario || '')}</td>
+                    <td>${formatPercentage(item.desconto || '')}</td>
+                    <td>${formatCurrency(valorVenda)}</td>
+                    <td>${item.unidade_medida || ''}</td>
+                    <td>${item.quantidade || ''}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+            tableContainer.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
