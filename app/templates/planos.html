@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planos - Zenith IA</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #EEECE8;
+            color: #040C42;
+            margin: 0;
+            padding: 0;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        header {
+            background: #040C42;
+            padding: 10px 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .navbar-brand {
+            position: relative;
+            width: 100%;
+            max-width: 220px;
+            height: 70px;
+            background-image: url('/static/images/logo.svg');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        .navbar-brand img {
+            width: 100%;
+            height: 100%;
+            display: block;
+            transition: transform 0.3s ease;
+            opacity: 1;
+        }
+
+        .navbar-brand img:hover {
+            transform: scale(1.05);
+        }
+
+        .nav-link {
+            color: #EEECE8;
+            font-weight: 600;
+            font-size: 1.2rem;
+            margin-left: 15px;
+            padding: 5px 10px;
+            position: relative;
+            transition: color 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: #BC7201;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            background: #BC7201;
+            bottom: 0;
+            left: 0;
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .navbar-toggler {
+            border: 1px solid #BC7201;
+        }
+
+        .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Cpath stroke='rgba(188, 114, 1, 1)' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
+        }
+
+        #particles-js {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            padding: 120px 20px;
+            z-index: 1;
+            position: relative;
+        }
+
+        h1 {
+            font-size: 4rem;
+            font-weight: 800;
+            color: #040C42;
+            text-align: center;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 8px rgba(188, 114, 1, 0.2);
+            position: relative;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        h1.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        h1::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background: #BC7201;
+        }
+
+        .subtitle {
+            font-size: 1.4rem;
+            color: #040C42;
+            text-align: center;
+            margin-bottom: 60px;
+            opacity: 0.8;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+            transition-delay: 0.2s;
+        }
+
+        .subtitle.visible {
+            opacity: 0.8;
+            transform: translateY(0);
+        }
+
+        .plans-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            justify-content: center;
+            align-items: stretch;
+        }
+
+        .plan-card {
+            background: #FFF;
+            border: 1px solid #040C42;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(188, 114, 1, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+            opacity: 0;
+            transform: translateY(30px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+        }
+
+        .plan-card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .plan-card:nth-child(1) { transition-delay: 0.2s; }
+        .plan-card:nth-child(2) { transition-delay: 0.4s; }
+        .plan-card:nth-child(3) { transition-delay: 0.6s; }
+
+        .plan-card:hover {
+            transform: scale(1.05);
+            border-color: #BC7201;
+            box-shadow: 0 10px 20px rgba(188, 114, 1, 0.3);
+        }
+
+        .plan-card h3 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #040C42;
+            margin-bottom: 20px;
+        }
+
+        .plan-card .price {
+            font-size: 2.8rem;
+            font-weight: 700;
+            color: #BC7201;
+            margin-bottom: 10px;
+            text-shadow: 0 0 8px rgba(188, 114, 1, 0.2);
+        }
+
+        .plan-card .period {
+            font-size: 1rem;
+            color: #040C42;
+            margin-bottom: 20px;
+            opacity: 0.8;
+        }
+
+        .plan-card ul {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 30px;
+            min-height: 300px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+
+        .plan-card ul li {
+            font-size: 1rem;
+            color: #040C42;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: left;
+            padding: 0 20px;
+        }
+
+        .plan-card ul li i {
+            margin-right: 10px;
+        }
+
+        .plan-card .bi-check-circle-fill {
+            color: #BC7201;
+        }
+
+        .plan-card .bi-x-circle-fill {
+            color: #DC3545;
+        }
+
+        .plan-card .btn {
+            background: #BC7201;
+            border: none;
+            color: #EEECE8;
+            border-radius: 10px;
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            width: 80%;
+            transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+        }
+
+        .plan-card .btn:hover {
+            background: #A65D00;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(188, 114, 1, 0.3);
+        }
+
+        .benefits-section {
+            background: #040C42;
+            border-radius: 15px;
+            padding: 2.5rem;
+            margin-top: 60px;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+
+        .benefits-section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .benefits-section h2 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #BC7201;
+            text-align: center;
+            margin-bottom: 40px;
+            text-shadow: 0 0 8px rgba(188, 114, 1, 0.2);
+        }
+
+        .benefits-section .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .benefits-section .benefit-card {
+            background: rgba(188, 114, 1, 0.1);
+            border: 1px solid #BC7201;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .benefits-section .benefit-card:hover {
+            transform: scale(1.03);
+            box-shadow: 0 8px 15px rgba(188, 114, 1, 0.3);
+        }
+
+        .benefits-section .benefit-card i {
+            font-size: 3rem;
+            color: #BC7201;
+            margin-bottom: 15px;
+        }
+
+        .benefits-section .benefit-card h4 {
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: #EEECE8;
+            margin-bottom: 10px;
+        }
+
+        .benefits-section .benefit-card p {
+            color: #EEECE8;
+            font-size: 1rem;
+            flex-grow: 1;
+            opacity: 0.8;
+        }
+
+        .faq-section {
+            background: #040C42;
+            border-radius: 15px;
+            padding: 2.5rem;
+            margin-top: 60px;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+
+        .faq-section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .faq-section h2 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #BC7201;
+            text-align: center;
+            margin-bottom: 40px;
+            text-shadow: 0 0 8px rgba(188, 114, 1, 0.2);
+            position: relative;
+        }
+
+        .faq-section h2::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background: #BC7201;
+        }
+
+        .faq-section .faq-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .faq-section .faq-item {
+            background: rgba(4, 12, 66, 0.05);
+            border: 1px solid #040C42;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            overflow: hidden;
+            transition: border-color 0.3s ease, background 0.3s ease;
+        }
+
+        .faq-section .faq-item:hover {
+            border-color: #BC7201;
+            background: rgba(4, 12, 66, 0.1);
+        }
+
+        .faq-section .faq-question {
+            background: none;
+            border: none;
+            width: 100%;
+            padding: 15px 20px;
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #EEECE8;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .faq-section .faq-question:hover {
+            color: #BC7201;
+        }
+
+        .faq-section .faq-question i {
+            font-size: 1.2rem;
+            color: #BC7201;
+            transition: transform 0.3s ease;
+        }
+
+        .faq-section .faq-question[aria-expanded="true"] i {
+            transform: rotate(180deg);
+        }
+
+        .faq-section .faq-answer {
+            background: rgba(188, 114, 1, 0.05);
+            padding: 15px 20px;
+            font-size: 0.95rem;
+            color: #EEECE8;
+            line-height: 1.6;
+            opacity: 0.8;
+        }
+
+        .cta-section {
+            background: #040C42;
+            border-radius: 15px;
+            padding: 3rem 2rem;
+            margin-top: 60px;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+
+        .cta-section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .cta-section h3 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #EEECE8;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 8px rgba(188, 114, 1, 0.2);
+        }
+
+        .cta-section p {
+            font-size: 1.2rem;
+            color: #EEECE8;
+            margin-bottom: 2rem;
+            opacity: 0.8;
+        }
+
+        .cta-section .btn {
+            background: #BC7201;
+            border: none;
+            color: #EEECE8;
+            border-radius: 10px;
+            padding: 12px 40px;
+            font-size: 1.3rem;
+            font-weight: 600;
+            transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+        }
+
+        .cta-section .btn:hover {
+            background: #A65D00;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(188, 114, 1, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 80px 15px;
+            }
+
+            h1 {
+                font-size: 2.8rem;
+            }
+
+            .subtitle {
+                font-size: 1.2rem;
+            }
+
+            .plan-card {
+                max-width: 100%;
+                margin: 0 auto;
+            }
+
+            .plan-card ul {
+                min-height: 300px;
+            }
+
+            .benefits-section h2, .faq-section h2, .cta-section h3 {
+                font-size: 2rem;
+            }
+
+            .benefits-section .benefit-card {
+                padding: 15px;
+                min-height: 280px;
+            }
+
+            .faq-section .faq-question {
+                font-size: 1.2rem;
+                padding: 12px 15px;
+            }
+
+            .faq-section .faq-answer {
+                font-size: 0.9rem;
+                padding: 12px 15px;
+            }
+
+            .cta-section {
+                padding: 2rem 1rem;
+            }
+
+            .cta-section p {
+                font-size: 1rem;
+            }
+
+            .cta-section .btn {
+                font-size: 1.2rem;
+                padding: 10px 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg">
+            <div class="container-fluid px-5">
+                <a class="navbar-brand" href="/">
+                    <img src="/static/images/logo.svg" alt="Zenith IA Logo">
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Alternar navegação">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                    <ul class="navbar-nav align-items-center">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/planos">Planos</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/login">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/cadastro">Cadastro</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div id="particles-js"></div>
+
+    <div class="container">
+        <h1>Escolha o plano ideal para o seu negócio!</h1>
+        <p class="subtitle">Comece grátis e escale conforme sua necessidade.</p>
+
+        <div class="plans-section">
+            <div class="plan-card">
+                <h3>Zenith Free</h3>
+                <div class="price">Grátis</div>
+                <div class="period"></div>
+                <ul>
+                    <li><i class="bi bi-check-circle-fill"></i> 1 agente</li>
+                    <li><i class="bi bi-check-circle-fill"></i> 25 interações por dia</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Treinamento por PDF/CSV</li>
+                    <li><i class="bi bi-x-circle-fill"></i> Upload de links</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Relatórios básicos</li>
+                    <li><i class="bi bi-x-circle-fill"></i> Integração com banco externo</li>
+                    <li><i class="bi bi-x-circle-fill"></i> API para sistemas</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Suporte por e-mail</li>
+                </ul>
+                <a href="/cadastro?plano=free" class="btn">Comece</a>
+            </div>
+
+            <div class="plan-card">
+                <h3>Zenith Plus</h3>
+                <div class="price">R$ 300</div>
+                <div class="period">por mês</div>
+                <ul>
+                    <li><i class="bi bi-check-circle-fill"></i> Até 3 agentes</li>
+                    <li><i class="bi bi-check-circle-fill"></i> 250 interações por dia</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Treinamento por PDF/CSV</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Upload de links</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Relatórios completos</li>
+                    <li><i class="bi bi-x-circle-fill"></i> Integração com banco externo</li>
+                    <li><i class="bi bi-x-circle-fill"></i> API para sistemas</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Suporte por e-mail + chat</li>
+                </ul>
+                <a href="/cadastro?plano=plus" class="btn">Comece</a>
+            </div>
+
+            <div class="plan-card">
+                <h3>Zenith Enterprise</h3>
+                <div class="price">R$ 550</div>
+                <div class="period">por mês</div>
+                <ul>
+                    <li><i class="bi bi-check-circle-fill"></i> Agentes ilimitados</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Interações ilimitadas</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Treinamento por PDF/CSV</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Upload de links</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Relatórios com exportação</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Integração com banco externo</li>
+                    <li><i class="bi bi-check-circle-fill"></i> API para sistemas</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Suporte dedicado</li>
+                </ul>
+                <a href="/cadastro?plano=enterprise" class="btn">Comece</a>
+            </div>
+        </div>
+
+        <div class="benefits-section">
+            <h2>Por que escolher o Zenith IA?</h2>
+            <div class="benefits-grid">
+                <div class="benefit-card">
+                    <i class="bi bi-rocket-takeoff"></i>
+                    <h4>Automatize suas vendas</h4>
+                    <p>Deixe a IA cuidar das vendas e suporte no WhatsApp, aumentando sua eficiência.</p>
+                </div>
+                <div class="benefit-card">
+                    <i class="bi bi-graph-up"></i>
+                    <h4>Relatórios detalhados</h4>
+                    <p>Acompanhe o desempenho do seu negócio com relatórios claros e acionáveis.</p>
+                </div>
+                <div class="benefit-card">
+                    <i class="bi bi-headset"></i>
+                    <h4>Suporte de qualidade</h4>
+                    <p>Tenha ajuda quando precisar, com opções de suporte que se adaptam ao seu plano.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="faq-section">
+            <h2>Perguntas Frequentes</h2>
+            <div class="faq-container">
+                <div class="faq-item">
+                    <button class="faq-question" type="button" data-bs-toggle="collapse" data-bs-target="#faq1" aria-expanded="false" aria-controls="faq1">
+                        O que significa "Treinamento por PDF/CSV"?
+                        <i class="bi bi-chevron-down"></i>
+                    </button>
+                    <div class="collapse faq-answer" id="faq1">
+                        Essa funcionalidade permite que você envie arquivos PDF ou CSV para treinar seu agente de IA. Por exemplo, você pode enviar manuais, documentos ou dados de clientes para que a IA aprenda a responder perguntas com base nessas informações.
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question" type="button" data-bs-toggle="collapse" data-bs-target="#faq2" aria-expanded="false" aria-controls="faq2">
+                        O que é "Integração com banco externo"?
+                        <i class="bi bi-chevron-down"></i>
+                    </button>
+                    <div class="collapse faq-answer" id="faq2">
+                        A integração com banco externo permite conectar o Zenith IA a bancos de dados como MySQL, PostgreSQL ou outros sistemas. Isso é útil para empresas que precisam que a IA acesse dados em tempo real, como estoques ou informações de clientes.
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question" type="button" data-bs-toggle="collapse" data-bs-target="#faq3" aria-expanded="false" aria-controls="faq3">
+                        Como funciona o "Suporte Dedicado" no plano Enterprise?
+                        <i class="bi bi-chevron-down"></i>
+                    </button>
+                    <div class="collapse faq-answer" id="faq3">
+                        No plano Enterprise, você tem acesso a um gerente de conta dedicado e suporte técnico prioritário 24/7. Isso inclui assistência personalizada para configuração, treinamento de agentes e resolução de problemas.
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question" type="button" data-bs-toggle="collapse" data-bs-target="#faq4" aria-expanded="false" aria-controls="faq4">
+                        Posso mudar de plano depois de escolher um?
+                        <i class="bi bi-chevron-down"></i>
+                    </button>
+                    <div class="collapse faq-answer" id="faq4">
+                        Sim! Você pode fazer upgrade ou downgrade de plano a qualquer momento diretamente no painel de controle. As alterações entram em vigor no próximo ciclo de faturamento.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="cta-section">
+            <h3>Transforme sua experiência com nosso suporte excepcional</h3>
+            <p>Cadastre-se agora e aproveite ao máximo!</p>
+            <a href="/cadastro" class="btn">Cadastre-se agora</a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        particlesJS('particles-js', {
+            particles: {
+                number: { value: 80, density: { enable: true, value_area: 800 } },
+                color: { value: '#BC7201' },
+                shape: { type: 'circle' },
+                opacity: { value: 0.5, random: true },
+                size: { value: 3, random: true },
+                line_linked: {
+                    enable: true,
+                    distance: 150,
+                    color: '#040C42',
+                    opacity: 0.4,
+                    width: 1
+                },
+                move: { enable: true, speed: 2, direction: 'none', random: true }
+            },
+            interactivity: {
+                events: { onhover: { enable: true, mode: 'repulse' } }
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const headerElements = document.querySelectorAll('h1, .subtitle');
+            headerElements.forEach(element => element.classList.add('visible'));
+
+            const elements = document.querySelectorAll('.plan-card, .benefits-section, .faq-section, .cta-section');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.2 });
+
+            elements.forEach(element => observer.observe(element));
+        });
+    </script>
+</body>
+</html>
