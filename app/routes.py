@@ -1,41 +1,35 @@
-# Importa o Blueprint para organizar as rotas da aplicação de forma modular
-from flask import Blueprint, request, jsonify, render_template, redirect, url_for, Response
-# Importa bibliotecas para fazer requisições à API do DeepSeek e carregar variáveis do .env
+from flask import Blueprint, request, jsonify, render_template, redirect, url_for, Response, send_file
 import requests
 import os
-# Importa o Client da Twilio para enviar mensagens
 from twilio.rest import Client
-# Importa funções e classes do Flask-Login para gerenciar autenticação
 from flask_login import login_required, current_user, login_user, logout_user
-# Importa funções do models.py para manipulação de dados
-from app.models import Usuario, registrar_usuario, login_usuario, login_usuario_web, cadastrar_usuario_empresa, get_persona_by_empresa, save_persona, get_empresa_id_by_usuario
+from app.models import Usuario, registrar_usuario, login_usuario, login_usuario_web, cadastrar_usuario_empresa, get_persona_by_empresa, save_persona, get_empresa_id_by_usuario, save_produtos
 from database.connection import connect_db
-# adicionado no backend para depuração
 import logging
 from logging.handlers import RotatingFileHandler
 
 # Configura logging
-log_handler = RotatingFileHandler(os.path.join(os.path.dirname(__file__), '..', 'log', 'system.log'), maxBytes=1024*1024, backupCount=5)
+log_dir = os.path.join(os.path.dirname(__file__), '..', 'log')
+os.makedirs(log_dir, exist_ok=True)
+log_handler = RotatingFileHandler(
+    os.path.join(log_dir, 'system.log'),
+    maxBytes=1024*1024,
+    backupCount=5
+)
 log_handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)s] %(message)s'))
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 logger.addHandler(log_handler)
 
-# Cria um blueprint chamado 'main' para agrupar as rotas da aplicação
 main = Blueprint('main', __name__)
 
-# Função para chamar a API do DeepSeek-V3
+ARCHIVE_FOLDER = os.path.join(os.path.dirname(__file__), '..', 'static', 'archive')
+os.makedirs(ARCHIVE_FOLDER, exist_ok=True)
+
 def call_deepseek_api(message):
-    """Chama a API do DeepSeek-V3 para processar uma mensagem.
-
-    Args:
-        message (str): Mensagem a ser processada pela API.
-
-    Returns:
-        str: Resposta da API ou mensagem de erro.
-    """
     api_key = os.getenv("DEEPSEEK_API_KEY")
     if not api_key:
+        logger.error("Chave de API do DeepSeek não encontrada no .env")
         return "Erro: Chave de API do DeepSeek não encontrada no .env"
     endpoint = "https://api.deepseek.com/chat/completions"
     headers = {
@@ -52,281 +46,267 @@ def call_deepseek_api(message):
         "temperature": 0.7,
         "stream": False
     }
-    response = requests.post(endpoint, json=payload, headers=headers)
-    if response.status_code == 200:
+    try:
+        response = requests.post(endpoint, json=payload, headers=headers)
+        response.raise_for_status()
         return response.json().get('choices')[0].get('message').get('content')
-    else:
-        return f"Erro na API: {response.status_code} - {response.json()}"
+    except requests.RequestException as e:
+        logger.error(f"Erro na API DeepSeek: {str(e)}")
+        return f"Erro na API: {str(e)}"
 
-# Rota para registrar um usuário via API (recebe dados em formato JSON)
 @main.route('/registro', methods=['POST'])
 def registrar_usuario_route():
-    """Registra um novo usuário via API.
-
-    Recebe dados em JSON (nome, email, senha) e registra o usuário no banco de dados.
-
-    Returns:
-        JSON: Mensagem de sucesso ou erro.
-    """
-    data = request.json
+    data = request.get_json()
+    if not data:
+        logger.error("Dados JSON ausentes na requisição /registro")
+        return jsonify({'success': False, 'message': 'Dados JSON ausentes'}), 400
     nome = data.get('nome')
     email = data.get('email')
     senha = data.get('senha')
-
-    # Valida se todos os campos obrigatórios foram preenchidos
     if not all([nome, email, senha]):
-        return jsonify({'erro': 'Todos os campos são obrigatórios'}), 400
-
-    # Chama a função do modelo para registrar o usuário
+        logger.error("Campos obrigatórios ausentes na requisição /registro")
+        return jsonify({'success': False, 'message': 'Todos os campos são obrigatórios'}), 400
     sucesso = registrar_usuario(nome, email, senha)
     if sucesso:
-        return jsonify({'mensagem': 'Usuário registrado com sucesso!'}), 201
-    else:
-        return jsonify({'erro': 'Erro ao registrar usuário'}), 500
+        logger.info(f"Usuário {email} registrado com sucesso via /registro")
+        return jsonify({'success': True, 'message': 'Usuário registrado com sucesso!'}), 201
+    logger.error(f"Erro ao registrar usuário {email}: e-mail já pode estar em uso")
+    return jsonify({'success': False, 'message': 'Erro ao registrar usuário, e-mail já pode estar em uso'}), 400
 
-# Rota para login de usuário via API (recebe dados em formato JSON)
 @main.route('/login', methods=['POST'])
 def login_usuario_route():
-    """Autentica um usuário via API.
-
-    Recebe email e senha em JSON, verifica as credenciais e retorna mensagem de sucesso ou erro.
-
-    Returns:
-        JSON: Mensagem de sucesso ou erro.
-    """
-    data = request.json
+    data = request.get_json()
+    if not data:
+        logger.error("Dados JSON ausentes na requisição /login")
+        return jsonify({'success': False, 'message': 'Dados JSON ausentes'}), 400
     email = data.get('email')
     senha = data.get('senha')
-
-    # Valida se os campos obrigatórios foram preenchidos
     if not all([email, senha]):
-        return jsonify({'erro': 'Email e senha são obrigatórios'}), 400
-
-    # Chama a função do modelo para autenticar o usuário
+        logger.error("Campos obrigatórios ausentes na requisição /login")
+        return jsonify({'success': False, 'message': 'Email e senha são obrigatórios'}), 400
     usuario = login_usuario(email, senha)
     if not usuario:
-        return jsonify({'erro': 'Usuário não encontrado ou senha incorreta'}), 401
+        logger.warning(f"Falha na autenticação via /login para {email}")
+        return jsonify({'success': False, 'message': 'Usuário não encontrado ou senha incorreta'}), 401
+    logger.info(f"Usuário {email} autenticado com sucesso via /login")
+    return jsonify({'success': True, 'message': f"Bem-vindo, {usuario['nome']}!"}), 200
 
-    return jsonify({'mensagem': f"Bem-vindo, {usuario['nome']}!"}), 200
-
-# Rota para exibir a página de login (método GET)
 @main.route('/login', methods=['GET'])
 def login_page():
-    """Exibe a página de login.
-
-    Returns:
-        HTML: Template login.html renderizado.
-    """
+    logger.info("Renderizando página de login")
     return render_template('login.html')
 
-# Rota para login via formulário web (método POST)
 @main.route('/login-web', methods=['POST'])
 def login_web():
-    """Autentica um usuário via formulário web e redireciona para o painel.
-
-    Recebe email e senha do formulário, autentica o usuário e inicia a sessão.
-
-    Returns:
-        Redireciona para o painel ou retorna mensagem de erro.
-    """
     email = request.form.get('email')
     senha = request.form.get('senha')
+    if not all([email, senha]):
+        logger.error("E-mail ou senha ausentes na requisição /login-web")
+        return jsonify({'success': False, 'message': 'E-mail e senha são obrigatórios'}), 400
+    try:
+        user_obj = login_usuario_web(email, senha)
+        if user_obj:
+            login_user(user_obj)
+            logger.info(f"Usuário {email} autenticado com sucesso via /login-web")
+            return jsonify({'success': True, 'message': 'Autenticação efetuada com sucesso!'}), 200
+        logger.warning(f"Falha na autenticação via /login-web para {email}: e-mail ou senha incorretos")
+        return jsonify({'success': False, 'message': 'E-mail ou senha incorretos'}), 401
+    except Exception as e:
+        logger.error(f"Erro ao autenticar usuário via /login-web: {str(e)}")
+        return jsonify({'success': False, 'message': f'Erro ao autenticar: {str(e)}'}), 500
 
-    # Chama a função do modelo para autenticar o usuário
-    user_obj = login_usuario_web(email, senha)
-    if user_obj:
-        login_user(user_obj)
-        return redirect(url_for('main.painel'))
-
-    return "E-mail ou senha incorretos."
-
-# Rota para página de cadastro (métodos GET e POST)
 @main.route('/cadastro', methods=['GET', 'POST'])
 def cadastro():
-    """Gerencia o cadastro de usuários e empresas.
-
-    - GET: Exibe o formulário de cadastro.
-    - POST: Processa o formulário e cadastra o usuário e a empresa.
-
-    Returns:
-        HTML ou mensagem: Template cadastro.html (GET) ou mensagem de sucesso/erro (POST).
-    """
     if request.method == 'POST':
-        # Dados do usuário extraídos do formulário
-        dados_usuario = {
-            'nome': request.form['nome'],
-            'email': request.form['email'],
-            'senha': request.form['senha'],
-            'cpf': request.form['cpf'],
-            'data_nascimento': request.form['data_nascimento'],
-            'cep': request.form['cep'],
-            'endereco': request.form['endereco'],
-            'plano': request.form['plano']
-        }
-
-        # Dados da empresa extraídos do formulário
-        dados_empresa = {
-            'razao_social': request.form['razao_social'],
-            'nome_fantasia': request.form['nome_fantasia'],
-            'cnpj': request.form['cnpj'],
-            'tipo_empresa': request.form['tipo_empresa'],
-            'telefone': request.form['telefone'],
-            'email_empresarial': request.form['email_empresarial'],
-            'inscricao_estadual': request.form['inscricao_estadual'],
-            'inscricao_municipal': request.form['inscricao_municipal'],
-            'cep_empresa': request.form['cep_empresa'],
-            'endereco_empresa': request.form['endereco_empresa']
-        }
-
-        # Chama a função do modelo para cadastrar usuário e empresa
-        sucesso, mensagem = cadastrar_usuario_empresa(dados_usuario, dados_empresa)
-        if sucesso:
-            return mensagem
-        else:
-            return mensagem
-
+        try:
+            data = request.get_json()
+            if not data:
+                logger.error("Dados JSON ausentes na requisição /cadastro")
+                return jsonify({'success': False, 'message': 'Dados JSON ausentes'}), 400
+            dados_usuario = data.get('dados_usuario', {})
+            dados_empresa = data.get('dados_empresa', {})
+            if not all([dados_usuario.get(key) for key in ['nome', 'email', 'senha', 'plano']]) or not all([dados_empresa.get(key) for key in ['razao_social', 'cnpj']]):
+                logger.error("Campos obrigatórios ausentes na requisição /cadastro")
+                return jsonify({'success': False, 'message': 'Todos os campos obrigatórios devem ser preenchidos'}), 400
+            sucesso, mensagem = cadastrar_usuario_empresa(dados_usuario, dados_empresa)
+            if sucesso:
+                logger.info(f"Usuário {dados_usuario['email']} e empresa {dados_empresa['razao_social']} cadastrados com sucesso")
+                return jsonify({'success': True, 'message': mensagem}), 201
+            logger.error(f"Erro ao cadastrar usuário/empresa: {mensagem}")
+            return jsonify({'success': False, 'message': mensagem}), 400
+        except Exception as e:
+            logger.error(f"Erro no endpoint /cadastro: {str(e)}")
+            return jsonify({'success': False, 'message': f'Erro ao cadastrar: {str(e)}'}), 500
+    logger.info("Renderizando página de cadastro")
     return render_template('cadastro.html')
 
-# Rota para página do painel (acessível apenas para usuários autenticados)
 @main.route('/painel')
 @login_required
 def painel():
-    """Exibe o painel do usuário autenticado.
-
-    Returns:
-        HTML: Template painel.html renderizado com os dados do usuário.
-    """
+    logger.info(f"Renderizando painel para usuário {current_user.email}")
     return render_template('painel.html', usuario=current_user)
 
-# Rota para logout (acessível apenas para usuários autenticados)
+@main.route('/acoes')
+@login_required
+def acoes():
+    try:
+        logger.info(f"Tentando renderizar página de ações para usuário {current_user.email} (ID: {current_user.id})")
+        empresa_id = get_empresa_id_by_usuario(current_user.id)
+        if not empresa_id:
+            logger.error(f"Empresa não encontrada para usuário {current_user.email}")
+            return jsonify({'success': False, 'message': 'Empresa não encontrada'}), 404
+        return render_template('acoes.html', usuario=current_user, empresa_id=empresa_id)
+    except Exception as e:
+        logger.error(f"Erro ao renderizar página de ações para usuário {current_user.email}: {str(e)}")
+        return jsonify({'success': False, 'message': f'Erro ao carregar página de ações: {str(e)}'}), 500
+
+@main.route('/upload_produtos', methods=['POST'])
+@login_required
+def upload_produtos():
+    try:
+        data = request.get_json()
+        if not data:
+            logger.warning(f"Dados JSON ausentes na requisição /upload_produtos para usuário {current_user.email}")
+            return jsonify({'success': False, 'message': 'Nenhum dado fornecido'}), 400
+        
+        update = data.get('update', False)
+        produtos = data.get('produtos', [])
+        
+        if not produtos:
+            logger.warning(f"Lista de produtos vazia na requisição /upload_produtos para usuário {current_user.email}")
+            return jsonify({'success': False, 'message': 'Lista de produtos vazia'}), 400
+        
+        result = save_produtos(produtos, update)
+        logger.info(f"Upload de produtos processado para usuário {current_user.email}: {result.get('message')}")
+        return jsonify(result), 200 if result['success'] or result.get('duplicates') else 500
+    except Exception as e:
+        logger.error(f"Erro ao processar upload de produtos para usuário {current_user.email}: {str(e)}")
+        return jsonify({'success': False, 'message': f'Erro ao processar: {str(e)}', 'inserted': 0, 'updated': 0, 'duplicates': []}), 500
+
+@main.route('/download_json_template')
+@login_required
+def download_json_template():
+    try:
+        json_content = '''[
+            {
+                "id": 1,
+                "codigo": "COD001",
+                "produto": "Produto Exemplo",
+                "valor_unitario": 100.00,
+                "desconto": 10,
+                "valor_venda": 90.00,
+                "unidade_medida": "un",
+                "quantidade": 5
+            }
+        ]'''
+        file_path = os.path.join(ARCHIVE_FOLDER, 'produtos_vendas_template.json')
+        with open(file_path, 'w', encoding='utf-8') as f:
+            f.write(json_content)
+        logger.info(f"Arquivo JSON gerado: {file_path}")
+        return send_file(file_path, as_attachment=True, download_name='produtos_vendas_template.json')
+    except Exception as e:
+        logger.error(f"Erro ao gerar arquivo JSON para usuário {current_user.email}: {str(e)}")
+        return jsonify({'success': False, 'message': f'Erro ao gerar template JSON: {str(e)}'}), 500
+
+@main.route('/download_csv_template')
+@login_required
+def download_csv_template():
+    try:
+        csv_content = '''"id","codigo","produto","valor_unitario","desconto","valor_venda","unidade_medida","quantidade"
+1,"COD001","Produto Exemplo",100.00,10,90.00,"un",5'''
+        file_path = os.path.join(ARCHIVE_FOLDER, 'produtos_vendas_template.csv')
+        with open(file_path, 'w', encoding='utf-8') as f:
+            f.write(csv_content)
+        logger.info(f"Arquivo CSV gerado: {file_path}")
+        return send_file(file_path, as_attachment=True, download_name='produtos_vendas_template.csv')
+    except Exception as e:
+        logger.error(f"Erro ao gerar arquivo CSV para usuário {current_user.email}: {str(e)}")
+        return jsonify({'success': False, 'message': f'Erro ao gerar template CSV: {str(e)}'}), 500
+
 @main.route('/logout')
 @login_required
 def logout():
-    """Faz o logout do usuário e redireciona para a página de login.
-
-    Returns:
-        Redireciona para a página de login.
-    """
+    logger.info(f"Usuário {current_user.email} fez logout")
     logout_user()
     return redirect(url_for('main.login_page'))
 
-# Rota para página inicial (Home)
 @main.route('/')
 def home():
-    """Exibe a página inicial da aplicação.
-
-    Returns:
-        HTML: Template index.html renderizado.
-    """
+    logger.info("Renderizando página inicial")
     return render_template('index.html')
 
-# Rota para página de planos
 @main.route('/planos')
 def planos():
-    """Exibe a página de planos da aplicação.
-
-    Returns:
-        HTML: Template planos.html renderizado.
-    """
+    logger.info("Renderizando página de planos")
     return render_template('planos.html')
 
-# Rota de webhook para receber mensagens do WhatsApp via Twilio
 @main.route('/webhook', methods=['POST'])
 def webhook():
-    """Processa mensagens recebidas do WhatsApp via Twilio.
-
-    Recebe mensagens, processa com a API DeepSeek e envia resposta de volta via Twilio.
-
-    Returns:
-        JSON: Status do processamento da mensagem.
-    """
     data = request.form
     message = data.get('Body', '')
     sender = data.get('From', '').replace('whatsapp:', '')
-
     if not message or not sender:
-        return jsonify({"status": "error", "message": "Missing message or sender"}), 400
-
+        logger.error("Mensagem ou remetente ausentes na requisição /webhook")
+        return jsonify({'success': False, 'message': 'Missing message or sender'}), 400
     response = call_deepseek_api(message)
-
-    account_sid = os.getenv("TWILIO_ACCOUNT_SID")
-    auth_token = os.getenv("TWILIO_AUTH_TOKEN")
+    account_sid = os.getenv('TWILIO_ACCOUNT_SID')
+    auth_token = os.getenv('TWILIO_AUTH_TOKEN')
     if not account_sid or not auth_token:
-        return jsonify({"status": "error", "message": "Credenciais da Twilio não configuradas"}), 500
+        logger.error("Credenciais da Twilio não configuradas")
+        return jsonify({'success': False, 'message': 'Credenciais da Twilio não configuradas'}), 500
+    try:
+        client = Client(account_sid, auth_token)
+        client.messages.create(
+            from_='whatsapp:+14155238886',
+            body=response,
+            to=f'whatsapp:{sender}'
+        )
+        logger.info(f"Mensagem processada e enviada para {sender}")
+        return jsonify({'success': True, 'message': 'Message processed'}), 200
+    except Exception as e:
+        logger.error(f"Erro ao enviar mensagem via Twilio: {str(e)}")
+        return jsonify({'success': False, 'message': f'Erro ao enviar mensagem: {str(e)}'}), 500
 
-    client = Client(account_sid, auth_token)
-    client.messages.create(
-        from_='whatsapp:+14155238886',
-        body=response,
-        to=f'whatsapp:{sender}'
-    )
-
-    return jsonify({"status": "success", "message": "Message processed"}), 200
-
-# Rota para página de treinamento de IA
 @main.route('/treinar_ia')
 @login_required
 def treinar_ia():
-    """Exibe a página de treinamento de IA para usuários autenticados.
-
-    Returns:
-        HTML: Template treinar_ia.html renderizado com os dados do usuário.
-    """
+    logger.info(f"Renderizando página de treinamento de IA para usuário {current_user.email}")
     return render_template('treinar_ia.html', usuario=current_user)
 
-# Rota para página de configuração da persona da IA
 @main.route('/persona_ia', methods=['GET'])
 @login_required
 def persona_ia():
-    """Exibe a página de configuração da persona da IA para usuários autenticados.
+    try:
+        empresa_id = get_empresa_id_by_usuario(current_user.id)
+        if not empresa_id:
+            logger.error(f"Empresa não encontrada para usuário {current_user.id}")
+            return jsonify({'success': False, 'message': 'Empresa não encontrada'}), 404
+        persona = get_persona_by_empresa(empresa_id)
+        response = Response(
+            render_template('persona_ia.html', persona=persona, usuario=current_user, empresa_id=empresa_id)
+        )
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        logger.info(f"Renderizando página de persona para usuário {current_user.email}")
+        return response
+    except Exception as e:
+        logger.error(f"Erro no endpoint /persona_ia: {str(e)}")
+        return jsonify({'success': False, 'message': f'Erro ao carregar persona: {str(e)}'}), 500
 
-    Busca a empresa associada ao usuário e a persona correspondente, se existir.
-
-    Returns:
-        HTML: Template persona_ia.html renderizado com os dados do usuário e persona.
-    """
-    conn = connect_db()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT id FROM empresas WHERE usuario_id = %s", (current_user.id,))
-    empresa = cursor.fetchone()
-    cursor.close()
-    conn.close()
-    
-    if not empresa:
-        logger.error(f"Empresa não encontrada para usuário {current_user.id}")
-        return jsonify({'erro': 'Empresa não encontrada'}), 404
-    
-    persona = get_persona_by_empresa(empresa['id'])
-    response = Response(render_template('persona_ia.html', persona=persona, usuario=current_user, empresa_id=empresa['id']))
-    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
-    return response
-
-# Rota para salvar a persona da IA
 @main.route('/persona_ia/save', methods=['POST'])
 @login_required
 def save_persona_route():
-    """Salva ou atualiza a persona da IA no banco de dados.
-
-    Recebe os dados da persona em JSON e os salva associados à empresa do usuário.
-
-    Returns:
-        JSON: Mensagem de sucesso ou erro.
-    """
     try:
         data = request.get_json()
         empresa_id = get_empresa_id_by_usuario(current_user.id)
-        
         if not empresa_id:
             logger.error(f"Empresa não encontrada para usuário {current_user.id}")
-            return jsonify({'erro': 'Empresa não encontrada'}), 404
-        
+            return jsonify({'success': False, 'message': 'Empresa não encontrada'}), 404
         sucesso = save_persona(empresa_id, data)
         if sucesso:
-            logger.info(f"Persona salva para empresa_id {empresa_id}")
-            return jsonify({'mensagem': 'Persona salva com sucesso!'}), 200
-        else:
-            logger.error(f"Erro ao salvar persona para empresa_id {empresa_id}")
-            return jsonify({'erro': 'Erro ao salvar persona'}), 500
+            logger.info(f"Persona salva para empresa_id {empresa_id} pelo usuário {current_user.email}")
+            return jsonify({'success': True, 'message': 'Persona salva com sucesso!'}), 200
+        logger.error(f"Erro ao salvar persona para empresa_id {empresa_id}")
+        return jsonify({'success': False, 'message': 'Erro ao salvar persona'}), 500
     except Exception as e:
         logger.error(f"Erro no endpoint /persona_ia/save: {str(e)}")
-        return jsonify({'erro': f'Erro ao salvar: {str(e)}'}), 500
+        return jsonify({'success': False, 'message': f'Erro ao salvar: {str(e)}'}), 500
