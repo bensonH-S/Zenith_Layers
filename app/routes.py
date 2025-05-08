@@ -1,5 +1,5 @@
 # Importa o Blueprint para organizar as rotas da aplicação de forma modular
-from flask import Blueprint, request, jsonify, render_template, redirect, url_for
+from flask import Blueprint, request, jsonify, render_template, redirect, url_for, Response
 # Importa bibliotecas para fazer requisições à API do DeepSeek e carregar variáveis do .env
 import requests
 import os
@@ -8,7 +8,13 @@ from twilio.rest import Client
 # Importa funções e classes do Flask-Login para gerenciar autenticação
 from flask_login import login_required, current_user, login_user, logout_user
 # Importa funções do models.py para manipulação de dados
-from app.models import Usuario, registrar_usuario, login_usuario, login_usuario_web, cadastrar_usuario_empresa
+from app.models import Usuario, registrar_usuario, login_usuario, login_usuario_web, cadastrar_usuario_empresa, get_persona_by_empresa, save_persona, get_empresa_id_by_usuario
+from database.connection import connect_db
+import logging
+
+# Configura logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 # Cria um blueprint chamado 'main' para agrupar as rotas da aplicação
 main = Blueprint('main', __name__)
@@ -264,12 +270,89 @@ def treinar_ia():
     return render_template('treinar_ia.html', usuario=current_user)
 
 # Rota para página de configuração da persona da IA
-@main.route('/persona_ia')
+@main.route('/persona_ia', methods=['GET'])
 @login_required
 def persona_ia():
     """Exibe a página de configuração da persona da IA para usuários autenticados.
 
+    Busca a empresa associada ao usuário e a persona correspondente, se existir.
+
     Returns:
-        HTML: Template persona_ia.html renderizado com os dados do usuário.
+        HTML: Template persona_ia.html renderizado com os dados do usuário e persona.
     """
-    return render_template('persona_ia.html', usuario=current_user)
+    conn = connect_db()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT id FROM empresas WHERE usuario_id = %s", (current_user.id,))
+    empresa = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    
+    if not empresa:
+        logger.error(f"Empresa não encontrada para usuário {current_user.id}")
+        return jsonify({'erro': 'Empresa não encontrada'}), 404
+    
+    persona = get_persona_by_empresa(empresa['id'])
+    logger.debug(f"Persona para empresa_id {empresa['id']}: {persona}")
+    response = Response(render_template('persona_ia.html', persona=persona, usuario=current_user, empresa_id=empresa['id']))
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    return response
+
+# Rota para salvar a persona da IA
+@main.route('/persona_ia/save', methods=['POST'])
+@login_required
+def save_persona_route():
+    """Salva ou atualiza a persona da IA no banco de dados.
+
+    Recebe os dados da persona em JSON e os salva associados à empresa do usuário.
+
+    Returns:
+        JSON: Mensagem de sucesso ou erro.
+    """
+    try:
+        data = request.get_json()
+        logger.debug(f"Dados recebidos para salvar persona: {data}")
+        empresa_id = get_empresa_id_by_usuario(current_user.id)
+        
+        if not empresa_id:
+            logger.error(f"Empresa não encontrada para usuário {current_user.id}")
+            return jsonify({'erro': 'Empresa não encontrada'}), 404
+        
+        logger.debug(f"Módulo de save_persona: {save_persona.__module__}, arquivo: {save_persona.__code__.co_filename}")
+        logger.debug(f"Chamando save_persona com empresa_id={empresa_id}, dados={data}")
+        sucesso = save_persona(empresa_id, data)
+        if sucesso:
+            logger.debug(f"Persona salva com sucesso para empresa_id {empresa_id}")
+            return jsonify({'mensagem': 'Persona salva com sucesso!'}), 200
+        else:
+            logger.error(f"Erro ao salvar persona para empresa_id {empresa_id}")
+            return jsonify({'erro': 'Erro ao salvar persona'}), 500
+    except Exception as e:
+        logger.error(f"Erro no endpoint /persona_ia/save: {str(e)}")
+        return jsonify({'erro': f'Erro ao salvar: {str(e)}'}), 500
+
+# # Rota temporária para testar a chamada de save_persona
+# @main.route('/test_save_persona', methods=['GET'])
+# @login_required
+# def test_save_persona():
+#     """Testa a chamada da função save_persona."""
+#     try:
+#         empresa_id = get_empresa_id_by_usuario(current_user.id)
+#         if not empresa_id:
+#             return jsonify({'erro': 'Empresa não encontrada'}), 404
+        
+#         dados_persona = {
+#             'nome_agente': 'Teste',
+#             'funcao_agente': 'Vendedor',
+#             'idioma': 'Português',
+#             'tom_voz': 'Amigável',
+#             'estilo_conversacao': 'Chat',
+#             'tamanho_resposta': 'Curta',
+#             'diretrizes': ['Teste diretriz']
+#         }
+#         logger.debug(f"Testando save_persona com empresa_id={empresa_id}, dados={dados_persona}")
+#         logger.debug(f"Módulo de save_persona: {save_persona.__module__}, arquivo: {save_persona.__code__.co_filename}")
+#         sucesso = save_persona(empresa_id, dados_persona)
+#         return jsonify({'sucesso': sucesso, 'mensagem': 'Teste concluído'})
+#     except Exception as e:
+#         logger.error(f"Erro no teste de save_persona: {str(e)}")
+#         return jsonify({'erro': f'Erro no teste: {str(e)}'}), 500

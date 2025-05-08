@@ -25,6 +25,7 @@
             width: 100%;
             height: 100%;
             z-index: 0;
+            pointer-events: auto; /* Permitir interação com partículas */
         }
 
         .sidebar {
@@ -35,7 +36,7 @@
             width: 250px;
             background: #040C42;
             padding: 30px 15px;
-            z-index: 1;
+            z-index: 2; /* Acima do particles-js */
             box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
         }
 
@@ -99,9 +100,17 @@
             gap: 20px;
             width: 100%;
             padding: 20px;
-            background: #fff;
+            background: rgba(255, 255, 255, 0.95); /* Fundo opaco como no login.html */
             border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            z-index: 2; /* Acima do particles-js */
+            position: relative;
+            pointer-events: auto; /* Garantir cliques na persona-form */
+        }
+
+        /* Bloquear interação com particles-js abaixo da persona-form */
+        .persona-form * {
+            pointer-events: auto;
         }
 
         .persona-form h2 {
@@ -296,54 +305,57 @@
 
     <div class="main-content">
         <div class="persona-form">
+            <button id="edit-persona">Editar</button>
             <h2>Persona de IA</h2>
             <p>Crie e personalize a personalidade da sua Zenith IA, definindo como ela se comunica e age para oferecer uma experiência única e inteligente.</p>
             <div class="form-group">
                 <label for="agent-name">Nome do Agente</label>
-                <input type="text" id="agent-name" placeholder="Dê um nome ao seu Agente" value="Jordan">
+                <input type="text" id="agent-name" placeholder="Dê um nome ao seu Agente" value="{{ persona.nome_agente if persona else '' }}" disabled>
             </div>
             <div class="form-group">
                 <label for="agent-role">Função do Agente</label>
-                <select id="agent-role">
-                    <option value="Customer Support Specialist" selected>Customer Support Specialist</option>
-                    <option value="Technical Support Agent">Technical Support Agent</option>
-                    <option value="Help Desk Representative">Help Desk Representative</option>
-                    <option value="Client Service Coordinator">Client Service Coordinator</option>
+                <select id="agent-role" disabled>
+                    <option value="Customer Support Specialist" {{ 'selected' if persona and persona.funcao_agente == 'Customer Support Specialist' else '' }}>Customer Support Specialist</option>
+                    <option value="Technical Support Agent" {{ 'selected' if persona and persona.funcao_agente == 'Technical Support Agent' else '' }}>Technical Support Agent</option>
+                    <option value="Help Desk Representative" {{ 'selected' if persona and persona.funcao_agente == 'Help Desk Representative' else '' }}>Help Desk Representative</option>
+                    <option value="Client Service Coordinator" {{ 'selected' if persona and persona.funcao_agente == 'Client Service Coordinator' else '' }}>Client Service Coordinator</option>
+                    <option value="Vendedor" {{ 'selected' if persona and persona.funcao_agente == 'Vendedor' else '' }}>Vendedor</option>
                 </select>
             </div>
             <div class="form-group">
                 <label for="agent-language">Idioma padrão</label>
-                <select id="agent-language">
-                    <option value="Portuguese" selected>Português</option>
-                    <option value="English">Inglês</option>
+                <select id="agent-language" disabled>
+                    <option value="Português" {{ 'selected' if persona and persona.idioma in ['Português', 'PORTUGUES'] else '' }}>Português</option>
+                    <option value="Inglês" {{ 'selected' if persona and persona.idioma == 'Inglês' else '' }}>Inglês</option>
                 </select>
             </div>
             <div class="form-group">
                 <label for="agent-tone">Tom de Voz</label>
-                <select id="agent-tone">
-                    <option value="Amigável" selected>😊 Amigável</option>
-                    <option value="Formal">Formal</option>
-                    <option value="Casual">Casual</option>
+                <select id="agent-tone" disabled>
+                    <option value="Amigável" {{ 'selected' if persona and persona.tom_voz == 'Amigável' else '' }}>😊 Amigável</option>
+                    <option value="Formal" {{ 'selected' if persona and persona.tom_voz == 'Formal' else '' }}>Formal</option>
+                    <option value="Casual" {{ 'selected' if persona and persona.tom_voz == 'Casual' else '' }}>Casual</option>
+                    <option value="Português" {{ 'selected' if persona and persona.tom_voz == 'PORTUGUES' else '' }}>Português</option>
                 </select>
             </div>
             <div class="form-group">
                 <label>Estilo de Conversação</label>
                 <div class="conversation-tabs">
-                    <button data-tabid="chat" class="active">Chat</button>
-                    <button data-tabid="voice">Voz</button>
+                    <button data-tabid="chat" class="{{ 'active' if persona and persona.estilo_conversacao == 'chat' else '' }}" disabled>Chat</button>
+                    <button data-tabid="voice" class="{{ 'active' if persona and persona.estilo_conversacao == 'voice' else '' }}" disabled>Voz</button>
                 </div>
             </div>
             <div class="form-group chat-tab-content">
                 <label>Tamanho da Resposta no Chat</label>
                 <div class="response-length-options">
                     <label>
-                        <input type="radio" name="response-length" value="Minimalistas"> Minimalistas
+                        <input type="radio" name="response-length" value="Minimalistas" {{ 'checked' if persona and persona.tamanho_resposta == 'Minimalistas' else '' }} disabled> Minimalistas
                     </label>
                     <label>
-                        <input type="radio" name="response-length" value="Curta" checked> Curta
+                        <input type="radio" name="response-length" value="Curta" {{ 'checked' if persona and persona.tamanho_resposta == 'Curta' else '' }} disabled> Curta
                     </label>
                     <label>
-                        <input type="radio" name="response-length" value="Longa"> Longa
+                        <input type="radio" name="response-length" value="Longa" {{ 'checked' if persona and persona.tamanho_resposta == 'Longa' else '' }} disabled> Longa
                     </label>
                 </div>
             </div>
@@ -351,37 +363,58 @@
                 <label>Diretrizes do Chat</label>
                 <p class="color-navy-300">Defina regras claras sobre como seu agente deve responder nos canais de bate-papo</p>
                 <div class="guidelines-list" id="guidelines-list">
-                    <div class="guideline-item">
-                        <input type="text" value="Seu principal objetivo é responder perguntas e resolver problemas de forma rápida." placeholder="Digite uma diretriz">
-                        <button class="remove-guideline"><i class="bi bi-trash"></i></button>
-                    </div>
-                    <div class="guideline-item">
-                        <input type="text" value="Sempre forneça soluções claras e úteis." placeholder="Digite uma diretriz">
-                        <button class="remove-guideline"><i class="bi bi-trash"></i></button>
-                    </div>
-                    <div class="guideline-item">
-                        <input type="text" value="Seja paciente, compreensivo e profissional em cada interação." placeholder="Digite uma diretriz">
-                        <button class="remove-guideline"><i class="bi bi-trash"></i></button>
-                    </div>
-                    <div class="guideline-item">
-                        <input type="text" value="Mantenha um tom amigável e acessível." placeholder="Digite uma diretriz">
-                        <button class="remove-guideline"><i class="bi bi-trash"></i></button>
-                    </div>
-                    <div class="guideline-item">
-                        <input type="text" value="Garanta que os usuários se sintam apoiados e valorizados ao longo da conversa." placeholder="Digite uma diretriz">
-                        <button class="remove-guideline"><i class="bi bi-trash"></i></button>
-                    </div>
+                    {% for i in range(1, 9) %}
+                        {% set diretriz = none %}
+                        {% if persona %}
+                            {% if i == 1 %}{% set diretriz = persona.diretrizes_1 %}
+                            {% elif i == 2 %}{% set diretriz = persona.diretrizes_2 %}
+                            {% elif i == 3 %}{% set diretriz = persona.diretrizes_3 %}
+                            {% elif i == 4 %}{% set diretriz = persona.diretrizes_4 %}
+                            {% elif i == 5 %}{% set diretriz = persona.diretrizes_5 %}
+                            {% elif i == 6 %}{% set diretriz = persona.diretrizes_6 %}
+                            {% elif i == 7 %}{% set diretriz = persona.diretrizes_7 %}
+                            {% elif i == 8 %}{% set diretriz = persona.diretrizes_8 %}
+                            {% endif %}
+                        {% endif %}
+                        {% if diretriz or i <= 5 %}
+                            <div class="guideline-item">
+                                <input type="text" value="{{ diretriz if diretriz is not none else '' }}" placeholder="Digite uma diretriz" disabled>
+                                <button class="remove-guideline" disabled><i class="bi bi-trash"></i></button>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
                 </div>
-                <button class="add-guideline-btn" id="add-guideline">
+                <button class="add-guideline-btn" id="add-guideline" disabled>
                     <i class="bi bi-plus-square"></i> Adicionar
                 </button>
             </div>
-            <button id="save-persona">Salvar</button>
+            <button id="save-persona" disabled>Salvar</button>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Logar valores renderizados pelo Jinja2
+        console.log('Valores renderizados:', {
+            empresa_id: '{{ empresa_id if empresa_id is defined else "N/A" }}',
+            nome_agente: '{{ persona.nome_agente if persona else "" }}',
+            funcao_agente: '{{ persona.funcao_agente if persona else "" }}',
+            idioma: '{{ persona.idioma if persona else "" }}',
+            tom_voz: '{{ persona.tom_voz if persona else "" }}',
+            estilo_conversacao: '{{ persona.estilo_conversacao if persona else "" }}',
+            tamanho_resposta: '{{ persona.tamanho_resposta if persona else "" }}',
+            diretrizes: [
+                '{{ persona.diretrizes_1 if persona else "" }}',
+                '{{ persona.diretrizes_2 if persona else "" }}',
+                '{{ persona.diretrizes_3 if persona else "" }}',
+                '{{ persona.diretrizes_4 if persona else "" }}',
+                '{{ persona.diretrizes_5 if persona else "" }}',
+                '{{ persona.diretrizes_6 if persona else "" }}',
+                '{{ persona.diretrizes_7 if persona else "" }}',
+                '{{ persona.diretrizes_8 if persona else "" }}'
+            ]
+        });
+
         particlesJS('particles-js', {
             particles: {
                 number: { value: 80, density: { enable: true, value_area: 800 } },
@@ -399,20 +432,44 @@
                 move: { enable: true, speed: 2, direction: 'none', random: true }
             },
             interactivity: {
-                events: { onhover: { enable: true, mode: 'repulse' } }
+                events: { onhover: { enable: true, mode: 'repulse' } } // Reativado como no login.html
             }
         });
 
         const tabs = document.querySelectorAll('.conversation-tabs button');
         tabs.forEach(tab => {
             tab.addEventListener('click', function() {
-                tabs.forEach(t => t.classList.remove('active'));
-                this.classList.add('active');
+                if (!this.disabled) {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                }
             });
         });
 
+        document.getElementById('edit-persona').addEventListener('click', function() {
+            console.log('Botão Editar clicado');
+            try {
+                const elements = document.querySelectorAll('.persona-form input, .persona-form select, .persona-form button:not(#edit-persona)');
+                console.log('Elementos encontrados:', elements.length);
+                elements.forEach(el => {
+                    el.disabled = false;
+                    console.log('Habilitado:', el.id || el.name || el.tagName);
+                });
+                alert('Campos habilitados para edição!');
+            } catch (error) {
+                console.error('Erro ao habilitar campos:', error);
+                alert('Erro ao habilitar campos: ' + error.message);
+            }
+        });
+
         document.getElementById('add-guideline').addEventListener('click', function() {
+            if (this.disabled) return;
             const guidelinesList = document.getElementById('guidelines-list');
+            const guidelineCount = guidelinesList.children.length;
+            if (guidelineCount >= 8) {
+                alert('Máximo de 8 diretrizes atingido!');
+                return;
+            }
             const newGuideline = document.createElement('div');
             newGuideline.className = 'guideline-item';
             newGuideline.innerHTML = `
@@ -428,31 +485,60 @@
 
         document.querySelectorAll('.remove-guideline').forEach(button => {
             button.addEventListener('click', function() {
-                button.parentElement.remove();
+                if (!this.disabled) {
+                    button.parentElement.remove();
+                }
             });
         });
 
         document.getElementById('save-persona').addEventListener('click', function() {
+            if (this.disabled) return;
             const agentName = document.getElementById('agent-name').value;
+            if (!agentName.trim()) {
+                alert('O nome do agente é obrigatório!');
+                return;
+            }
             const agentRole = document.getElementById('agent-role').value;
             const agentLanguage = document.getElementById('agent-language').value;
             const agentTone = document.getElementById('agent-tone').value;
             const conversationStyle = document.querySelector('.conversation-tabs button.active').getAttribute('data-tabid');
             const responseLength = document.querySelector('input[name="response-length"]:checked').value;
-            const chatGuidelines = Array.from(document.querySelectorAll('#guidelines-list input')).map(input => input.value);
+            const chatGuidelines = Array.from(document.querySelectorAll('#guidelines-list input'))
+                .map(input => input.value)
+                .filter(value => value.trim() !== '');
 
             const agentSettings = {
-                name: agentName,
-                role: agentRole,
-                language: agentLanguage,
-                tone: agentTone,
-                conversationStyle: conversationStyle,
-                responseLength: responseLength,
-                guidelines: chatGuidelines
+                nome_agente: agentName,
+                funcao_agente: agentRole,
+                idioma: agentLanguage,
+                tom_voz: agentTone,
+                estilo_conversacao: conversationStyle,
+                tamanho_resposta: responseLength,
+                diretrizes: chatGuidelines
             };
-            localStorage.setItem('agentSettings', JSON.stringify(agentSettings));
 
-            window.location.href = '{{ url_for("main.treinar_ia") }}';
+            console.log('Enviando dados para salvar:', agentSettings);
+            document.getElementById('save-persona').innerText = 'Salvando...';
+            fetch('/persona_ia/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(agentSettings)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                document.getElementById('save-persona').innerText = 'Salvar';
+                alert(data.mensagem || data.erro);
+            })
+            .catch(error => {
+                document.getElementById('save-persona').innerText = 'Salvar';
+                console.error('Erro ao salvar:', error);
+                alert('Erro ao salvar: ' + error.message);
+            });
         });
     </script>
 </body>
