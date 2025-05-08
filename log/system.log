@@ -1,2 +1,7 @@
 2025-05-08 10:04:31,544 [INFO] Persona salva para empresa_id 15
 2025-05-08 10:04:31,545 [INFO] Persona salva para empresa_id 15
+2025-05-08 10:27:57,126 [ERROR] Erro ao cadastrar usuário/empresa: 1062 (23000): Duplicate entry 'jvictorcapone@gmail.com' for key 'email'
+2025-05-08 13:00:52,719 [INFO] Persona salva para empresa_id 18
+2025-05-08 13:00:52,720 [INFO] Persona salva para empresa_id 18
+2025-05-08 13:05:42,696 [INFO] Persona salva para empresa_id 18
+2025-05-08 13:05:42,696 [INFO] Persona salva para empresa_id 18
