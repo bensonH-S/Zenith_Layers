@@ -4,13 +4,17 @@ from flask_login import UserMixin
 from database.connection import connect_db
 # Importa funções para gerar e verificar hash de senhas
 from werkzeug.security import generate_password_hash, check_password_hash
+# adicionado no backend para depuração
 import logging
-
-print("Carregando models.py com save_persona(empresa_id, dados_persona)")  # Adicione esta linha
+import os
+from logging.handlers import RotatingFileHandler
 
 # Configura logging básico para depuração
-logging.basicConfig(level=logging.DEBUG)
+log_handler = RotatingFileHandler(os.path.join(os.path.dirname(__file__), '..', 'log', 'system.log'), maxBytes=1024*1024, backupCount=5)
+log_handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)s] %(message)s'))
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+logger.addHandler(log_handler)
 
 # Define a classe Usuario, que representa um usuário no sistema
 # Herda de UserMixin pra integrar com o Flask-Login (adiciona métodos como is_authenticated, is_active, etc.)
@@ -188,7 +192,6 @@ def get_empresa_id_by_usuario(usuario_id):
         cursor.execute("SELECT id FROM empresas WHERE usuario_id = %s", (usuario_id,))
         empresa = cursor.fetchone()
         if empresa:
-            logger.debug(f"Empresa encontrada para usuario_id {usuario_id}: {empresa['id']}")
             return empresa['id']
         logger.error(f"Empresa não encontrada para usuario_id {usuario_id}")
         return None
@@ -218,7 +221,6 @@ def get_persona_by_empresa(empresa_id):
         cursor = conn.cursor(dictionary=True)
         cursor.execute("SELECT * FROM persona_ia WHERE empresa_id = %s", (empresa_id,))
         persona = cursor.fetchone()
-        logger.debug(f"Persona encontrada para empresa_id {empresa_id}: {persona}")
         return persona
     except Exception as e:
         logger.error(f"Erro ao buscar persona: {str(e)}")
@@ -286,7 +288,7 @@ def save_persona(empresa_id, dados_persona):
                 diretrizes[6] or None, diretrizes[7] or None
             ))
         conn.commit()
-        logger.debug(f"Persona salva para empresa_id {empresa_id}")
+        logger.info(f"Persona salva para empresa_id {empresa_id}")
         return True
     except Exception as e:
         logger.error(f"Erro ao salvar persona: {str(e)}")

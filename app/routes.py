@@ -10,11 +10,16 @@ from flask_login import login_required, current_user, login_user, logout_user
 # Importa funções do models.py para manipulação de dados
 from app.models import Usuario, registrar_usuario, login_usuario, login_usuario_web, cadastrar_usuario_empresa, get_persona_by_empresa, save_persona, get_empresa_id_by_usuario
 from database.connection import connect_db
+# adicionado no backend para depuração
 import logging
+from logging.handlers import RotatingFileHandler
 
 # Configura logging
-logging.basicConfig(level=logging.DEBUG)
+log_handler = RotatingFileHandler(os.path.join(os.path.dirname(__file__), '..', 'log', 'system.log'), maxBytes=1024*1024, backupCount=5)
+log_handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)s] %(message)s'))
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+logger.addHandler(log_handler)
 
 # Cria um blueprint chamado 'main' para agrupar as rotas da aplicação
 main = Blueprint('main', __name__)
@@ -292,7 +297,6 @@ def persona_ia():
         return jsonify({'erro': 'Empresa não encontrada'}), 404
     
     persona = get_persona_by_empresa(empresa['id'])
-    logger.debug(f"Persona para empresa_id {empresa['id']}: {persona}")
     response = Response(render_template('persona_ia.html', persona=persona, usuario=current_user, empresa_id=empresa['id']))
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
     return response
@@ -310,18 +314,15 @@ def save_persona_route():
     """
     try:
         data = request.get_json()
-        logger.debug(f"Dados recebidos para salvar persona: {data}")
         empresa_id = get_empresa_id_by_usuario(current_user.id)
         
         if not empresa_id:
             logger.error(f"Empresa não encontrada para usuário {current_user.id}")
             return jsonify({'erro': 'Empresa não encontrada'}), 404
         
-        logger.debug(f"Módulo de save_persona: {save_persona.__module__}, arquivo: {save_persona.__code__.co_filename}")
-        logger.debug(f"Chamando save_persona com empresa_id={empresa_id}, dados={data}")
         sucesso = save_persona(empresa_id, data)
         if sucesso:
-            logger.debug(f"Persona salva com sucesso para empresa_id {empresa_id}")
+            logger.info(f"Persona salva para empresa_id {empresa_id}")
             return jsonify({'mensagem': 'Persona salva com sucesso!'}), 200
         else:
             logger.error(f"Erro ao salvar persona para empresa_id {empresa_id}")
@@ -329,30 +330,3 @@ def save_persona_route():
     except Exception as e:
         logger.error(f"Erro no endpoint /persona_ia/save: {str(e)}")
         return jsonify({'erro': f'Erro ao salvar: {str(e)}'}), 500
-
-# # Rota temporária para testar a chamada de save_persona
-# @main.route('/test_save_persona', methods=['GET'])
-# @login_required
-# def test_save_persona():
-#     """Testa a chamada da função save_persona."""
-#     try:
-#         empresa_id = get_empresa_id_by_usuario(current_user.id)
-#         if not empresa_id:
-#             return jsonify({'erro': 'Empresa não encontrada'}), 404
-        
-#         dados_persona = {
-#             'nome_agente': 'Teste',
-#             'funcao_agente': 'Vendedor',
-#             'idioma': 'Português',
-#             'tom_voz': 'Amigável',
-#             'estilo_conversacao': 'Chat',
-#             'tamanho_resposta': 'Curta',
-#             'diretrizes': ['Teste diretriz']
-#         }
-#         logger.debug(f"Testando save_persona com empresa_id={empresa_id}, dados={dados_persona}")
-#         logger.debug(f"Módulo de save_persona: {save_persona.__module__}, arquivo: {save_persona.__code__.co_filename}")
-#         sucesso = save_persona(empresa_id, dados_persona)
-#         return jsonify({'sucesso': sucesso, 'mensagem': 'Teste concluído'})
-#     except Exception as e:
-#         logger.error(f"Erro no teste de save_persona: {str(e)}")
-#         return jsonify({'erro': f'Erro no teste: {str(e)}'}), 500
