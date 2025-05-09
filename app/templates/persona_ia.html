@@ -47,6 +47,7 @@
             max-width: 220px;
             height: 80px;
             margin: 0 auto 40px;
+            background-image: url('/static/images/logo.svg');
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
@@ -117,12 +118,14 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 10px;
+            width: 100%;
+            flex-grow: 1;
         }
 
         .persona-form h2 {
             font-size: 1.5rem;
             font-weight: 700;
-            margin: 0;
+            margin-bottom: 10px;
         }
 
         .persona-form .edit-button {
@@ -167,7 +170,7 @@
             font-family: 'Inter', sans-serif;
         }
 
-        .persona-form button:not(.edit-button) {
+        .persona-form button {
             background: #BC7201;
             color: #EEECE8;
             border: none;
@@ -178,7 +181,7 @@
             font-weight: 600;
         }
 
-        .persona-form button:not(.edit-button):hover {
+        .persona-form button:hover {
             background: #A65D00;
         }
 
@@ -199,14 +202,10 @@
             transition: background 0.3s ease, color 0.3s ease;
         }
 
-        .conversation-tabs button:hover:not(.active) {
-            background: #e6e9ff;
-        }
-
         .conversation-tabs button.active {
-            background: #040C42;
+            background: #BC7201;
             color: #EEECE8;
-            border-color: #040C42;
+            border-color: #BC7201;
         }
 
         .response-length-options {
@@ -290,6 +289,7 @@
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 10px;
+                width: 100%;
             }
 
             .persona-form .edit-button {
@@ -337,8 +337,8 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('main.logout') }}">
-                    <i class="bi bi-box-arrow-right"></i> Sair
+                <a class="nav-link" href="{{ url_for('main.painel') }}">
+                    <i class="bi bi-arrow-left"></i> Voltar
                 </a>
             </li>
         </ul>
@@ -383,6 +383,7 @@
             <div class="form-group">
                 <label>Estilo de Conversação</label>
                 <div class="conversation-tabs">
+                    <!-- Applies 'active' class based on persona.estilo_conversacao -->
                     <button data-tabid="chat" class="{{ 'active' if persona and persona.estilo_conversacao == 'chat' else '' }}" disabled>Chat</button>
                     <button data-tabid="voice" class="{{ 'active' if persona and persona.estilo_conversacao == 'voice' else '' }}" disabled>Voz</button>
                 </div>
@@ -507,10 +508,20 @@
             }
         });
 
+        // Validate conversation tabs active state on page load
         const tabs = document.querySelectorAll('.conversation-tabs button');
+        console.log('Conversation tabs found:', tabs.length, tabs);
+        const activeTabs = document.querySelectorAll('.conversation-tabs button.active');
+        console.log('Active tabs found:', activeTabs.length, activeTabs);
+        if (activeTabs.length > 1) {
+            // If both buttons are active, remove 'active' from 'voice'
+            console.log('Multiple active tabs detected, removing active from voice');
+            document.querySelector('.conversation-tabs button[data-tabid="voice"]').classList.remove('active');
+        }
         tabs.forEach(tab => {
             tab.addEventListener('click', function() {
                 if (!this.disabled) {
+                    console.log('Tab clicked:', this.getAttribute('data-tabid'));
                     tabs.forEach(t => t.classList.remove('active'));
                     this.classList.add('active');
                 }
