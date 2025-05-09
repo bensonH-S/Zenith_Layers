@@ -7,6 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
     <style>
         body {
@@ -25,7 +26,7 @@
             width: 100%;
             height: 100%;
             z-index: 0;
-            pointer-events: auto; /* Permitir interação com partículas */
+            pointer-events: auto;
         }
 
         .sidebar {
@@ -36,7 +37,7 @@
             width: 250px;
             background: #040C42;
             padding: 30px 15px;
-            z-index: 2; /* Acima do particles-js */
+            z-index: 2;
             box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
         }
 
@@ -46,7 +47,6 @@
             max-width: 220px;
             height: 80px;
             margin: 0 auto 40px;
-            background-image: url('/static/images/logo.svg');
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
@@ -100,23 +100,45 @@
             gap: 20px;
             width: 100%;
             padding: 20px;
-            background: rgba(255, 255, 255, 0.95); /* Fundo opaco como no login.html */
+            background: rgba(255, 255, 255, 0.95);
             border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-            z-index: 2; /* Acima do particles-js */
+            z-index: 2;
             position: relative;
-            pointer-events: auto; /* Garantir cliques na persona-form */
+            pointer-events: auto;
         }
 
-        /* Bloquear interação com particles-js abaixo da persona-form */
         .persona-form * {
             pointer-events: auto;
+        }
+
+        .persona-form-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
         }
 
         .persona-form h2 {
             font-size: 1.5rem;
             font-weight: 700;
-            margin-bottom: 10px;
+            margin: 0;
+        }
+
+        .persona-form .edit-button {
+            background: #BC7201;
+            color: #EEECE8;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: background 0.3s ease;
+            cursor: pointer;
+        }
+
+        .persona-form .edit-button:hover {
+            background: #A65D00;
         }
 
         .persona-form p {
@@ -145,7 +167,7 @@
             font-family: 'Inter', sans-serif;
         }
 
-        .persona-form button {
+        .persona-form button:not(.edit-button) {
             background: #BC7201;
             color: #EEECE8;
             border: none;
@@ -156,7 +178,7 @@
             font-weight: 600;
         }
 
-        .persona-form button:hover {
+        .persona-form button:not(.edit-button):hover {
             background: #A65D00;
         }
 
@@ -177,10 +199,14 @@
             transition: background 0.3s ease, color 0.3s ease;
         }
 
+        .conversation-tabs button:hover:not(.active) {
+            background: #e6e9ff;
+        }
+
         .conversation-tabs button.active {
-            background: #BC7201;
+            background: #040C42;
             color: #EEECE8;
-            border-color: #BC7201;
+            border-color: #040C42;
         }
 
         .response-length-options {
@@ -259,6 +285,16 @@
                 margin-left: 0;
                 padding: 20px;
             }
+
+            .persona-form-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .persona-form .edit-button {
+                align-self: flex-end;
+            }
         }
     </style>
 </head>
@@ -267,21 +303,21 @@
 
     <div class="sidebar">
         <div class="logo">
-            <img src="/static/images/logo.svg" alt="Zenith IA Logo">
+            <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Zenith IA Logo">
         </div>
         <ul class="nav flex-column">
             <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('main.treinar_ia') }}">
+                <a class="nav-link {{ 'active' if request.endpoint == 'main.treinar_ia' else '' }}" href="{{ url_for('main.treinar_ia') }}">
                     <i class="bi bi-robot"></i> Modelo Zenith
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link active" href="{{ url_for('main.persona_ia') }}">
+                <a class="nav-link {{ 'active' if request.endpoint == 'main.persona_ia' else '' }}" href="{{ url_for('main.persona_ia') }}">
                     <i class="bi bi-person"></i> Persona Zenith
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#">
+                <a class="nav-link {{ 'active' if request.endpoint == 'main.acoes' else '' }}" href="{{ url_for('main.acoes') }}">
                     <i class="bi bi-gear"></i> Ações
                 </a>
             </li>
@@ -300,13 +336,20 @@
                     <i class="bi bi-chat"></i> Ensine Seu Agente
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('main.logout') }}">
+                    <i class="bi bi-box-arrow-right"></i> Sair
+                </a>
+            </li>
         </ul>
     </div>
 
     <div class="main-content">
         <div class="persona-form">
-            <button id="edit-persona">Editar</button>
-            <h2>Persona de IA</h2>
+            <div class="persona-form-header">
+                <h2>Persona de IA</h2>
+                <button id="edit-persona" class="edit-button">Editar</button>
+            </div>
             <p>Crie e personalize a personalidade da sua Zenith IA, definindo como ela se comunica e age para oferecer uma experiência única e inteligente.</p>
             <div class="form-group">
                 <label for="agent-name">Nome do Agente</label>
@@ -332,10 +375,9 @@
             <div class="form-group">
                 <label for="agent-tone">Tom de Voz</label>
                 <select id="agent-tone" disabled>
-                    <option value="Amigável" {{ 'selected' if persona and persona.tom_voz == 'Amigável' else '' }}>😊 Amigável</option>
+                    <option value="Amigável" {{ 'selected' if persona and persona.tom_voz == 'Amigável' else '' }}>Amigável</option>
                     <option value="Formal" {{ 'selected' if persona and persona.tom_voz == 'Formal' else '' }}>Formal</option>
                     <option value="Casual" {{ 'selected' if persona and persona.tom_voz == 'Casual' else '' }}>Casual</option>
-                    <option value="Português" {{ 'selected' if persona and persona.tom_voz == 'PORTUGUES' else '' }}>Português</option>
                 </select>
             </div>
             <div class="form-group">
@@ -363,6 +405,13 @@
                 <label>Diretrizes do Chat</label>
                 <p class="color-navy-300">Defina regras claras sobre como seu agente deve responder nos canais de bate-papo</p>
                 <div class="guidelines-list" id="guidelines-list">
+                    {% set default_guidelines = [
+                        'Seu principal objetivo é responder perguntas e resolver problemas de forma rápida.',
+                        'Sempre forneça soluções claras e úteis.',
+                        'Seja paciente, compreensivo e profissional em cada interação.',
+                        'Mantenha um tom amigável e acessível.',
+                        'Garanta que os usuários se sintam apoiados e valorizados ao longo da conversa.'
+                    ] %}
                     {% for i in range(1, 9) %}
                         {% set diretriz = none %}
                         {% if persona %}
@@ -376,9 +425,9 @@
                             {% elif i == 8 %}{% set diretriz = persona.diretrizes_8 %}
                             {% endif %}
                         {% endif %}
-                        {% if diretriz or i <= 5 %}
+                        {% if diretriz is not none or i <= 5 %}
                             <div class="guideline-item">
-                                <input type="text" value="{{ diretriz if diretriz is not none else '' }}" placeholder="Digite uma diretriz" disabled>
+                                <input type="text" value="{{ diretriz if diretriz is not none else default_guidelines[i-1] if i <= 5 else '' }}" placeholder="Digite uma diretriz" disabled>
                                 <button class="remove-guideline" disabled><i class="bi bi-trash"></i></button>
                             </div>
                         {% endif %}
@@ -392,9 +441,31 @@
         </div>
     </div>
 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script>
-        // Logar valores renderizados pelo Jinja2
+        toastr.options = {
+            closeButton: true,
+            progressBar: true,
+            positionClass: 'toast-top-right',
+            timeOut: 5000,
+            showMethod: 'fadeIn',
+            hideMethod: 'fadeOut',
+            toastClass: 'toast',
+            onShown: function() {
+                document.querySelectorAll('.toast').forEach(toast => {
+                    if (toast.classList.contains('toast-success')) {
+                        toast.style.backgroundColor = '#28a745';
+                        toast.style.color = '#ffffff';
+                    } else if (toast.classList.contains('toast-error')) {
+                        toast.style.backgroundColor = '#dc3545';
+                        toast.style.color = '#ffffff';
+                    }
+                });
+            }
+        };
+
         console.log('Valores renderizados:', {
             empresa_id: '{{ empresa_id if empresa_id is defined else "N/A" }}',
             nome_agente: '{{ persona.nome_agente if persona else "" }}',
@@ -432,7 +503,7 @@
                 move: { enable: true, speed: 2, direction: 'none', random: true }
             },
             interactivity: {
-                events: { onhover: { enable: true, mode: 'repulse' } } // Reativado como no login.html
+                events: { onhover: { enable: true, mode: 'repulse' } }
             }
         });
 
@@ -455,10 +526,10 @@
                     el.disabled = false;
                     console.log('Habilitado:', el.id || el.name || el.tagName);
                 });
-                alert('Campos habilitados para edição!');
+                toastr.success('Campos habilitados para edição!', 'Sucesso');
             } catch (error) {
                 console.error('Erro ao habilitar campos:', error);
-                alert('Erro ao habilitar campos: ' + error.message);
+                toastr.error('Erro ao habilitar campos: ' + error.message, 'Erro');
             }
         });
 
@@ -467,7 +538,7 @@
             const guidelinesList = document.getElementById('guidelines-list');
             const guidelineCount = guidelinesList.children.length;
             if (guidelineCount >= 8) {
-                alert('Máximo de 8 diretrizes atingido!');
+                toastr.error('Máximo de 8 diretrizes atingido!', 'Erro');
                 return;
             }
             const newGuideline = document.createElement('div');
@@ -495,7 +566,7 @@
             if (this.disabled) return;
             const agentName = document.getElementById('agent-name').value;
             if (!agentName.trim()) {
-                alert('O nome do agente é obrigatório!');
+                toastr.error('O nome do agente é obrigatório!', 'Erro');
                 return;
             }
             const agentRole = document.getElementById('agent-role').value;
@@ -519,7 +590,7 @@
 
             console.log('Enviando dados para salvar:', agentSettings);
             document.getElementById('save-persona').innerText = 'Salvando...';
-            fetch('/persona_ia/save', {
+            fetch('{{ url_for("main.save_persona_route") }}', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(agentSettings)
@@ -532,12 +603,19 @@
             })
             .then(data => {
                 document.getElementById('save-persona').innerText = 'Salvar';
-                alert(data.mensagem || data.erro);
+                if (data.success) {
+                    toastr.success(data.message || 'Persona salva com sucesso!', 'Sucesso');
+                    document.querySelectorAll('.persona-form input, .persona-form select, .persona-form button:not(#edit-persona)').forEach(el => {
+                        el.disabled = true;
+                    });
+                } else {
+                    toastr.error(data.message || 'Erro ao salvar persona.', 'Erro');
+                }
             })
             .catch(error => {
                 document.getElementById('save-persona').innerText = 'Salvar';
                 console.error('Erro ao salvar:', error);
-                alert('Erro ao salvar: ' + error.message);
+                toastr.error('Erro ao salvar: ' + error.message, 'Erro');
             });
         });
     </script>
