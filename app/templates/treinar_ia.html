@@ -221,33 +221,38 @@
         </div>
         <ul class="nav flex-column">
             <li class="nav-item">
-                <a class="nav-link active" href="{{ url_for('main.treinar_ia') }}" data-bs-toggle="tab" data-bs-target="#build-tab">
+                <a class="nav-link {{ 'active' if request.endpoint == 'main.treinar_ia' else '' }}" href="{{ url_for('main.treinar_ia') }}">
                     <i class="bi bi-robot"></i> Modelo Zenith
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('main.persona_ia') }}">
+                <a class="nav-link {{ 'active' if request.endpoint == 'main.persona_ia' else '' }}" href="{{ url_for('main.persona_ia') }}">
                     <i class="bi bi-person"></i> Persona Zenith
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#" data-bs-toggle="tab" data-bs-target="#build-tab">
+                <a class="nav-link {{ 'active' if request.endpoint == 'main.acoes' else '' }}" href="{{ url_for('main.acoes') }}">
                     <i class="bi bi-gear"></i> Ações
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#" data-bs-toggle="tab" data-bs-target="#build-tab">
+                <a class="nav-link" href="#">
                     <i class="bi bi-tools"></i> Ferramentas
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#" data-bs-toggle="tab" data-bs-target="#build-tab">
+                <a class="nav-link" href="#">
                     <i class="bi bi-file-earmark-text"></i> Formulários
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#" data-bs-toggle="tab" data-bs-target="#build-tab">
+                <a class="nav-link" href="#">
                     <i class="bi bi-chat"></i> Ensine Seu Agente
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('main.painel') }}">
+                    <i class="bi bi-arrow-left"></i> Voltar
                 </a>
             </li>
         </ul>
