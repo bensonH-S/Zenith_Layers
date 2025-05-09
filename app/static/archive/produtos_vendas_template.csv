@@ -1,0 +1,7 @@
+codigo,produto,valor_unitario,desconto,unidade_medida,quantidade
+COD001,Produto 1,10.00,5.00,unidade,5
+COD002,Produto 2,25.50,2.50,kg,3
+COD003,Produto 3,100.00,10.00,litro,1
+COD004,Produto 4,5.75,1.75,unidade,10
+COD005,Produto 5,40.00,5.00,kg,2
+COD006,Produto 6,145.00,8.00,gr,15

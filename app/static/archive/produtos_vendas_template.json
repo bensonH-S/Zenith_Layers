@@ -1,0 +1,42 @@
+[
+  {
+    "codigo": "COD001",
+    "produto": "Produto 1",
+    "valor_unitario": 10.00,
+    "desconto": 1.00,
+    "unidade_medida": "unidade",
+    "quantidade": 5
+  },
+  {
+    "codigo": "COD002",
+    "produto": "Produto 2",
+    "valor_unitario": 25.50,
+    "desconto": 2.50,
+    "unidade_medida": "kg",
+    "quantidade": 3
+  },
+  {
+    "codigo": "COD003",
+    "produto": "Produto 3",
+    "valor_unitario": 100.00,
+    "desconto": 10.00,
+    "unidade_medida": "litro",
+    "quantidade": 1
+  },
+  {
+    "codigo": "COD004",
+    "produto": "Produto 4",
+    "valor_unitario": 5.75,
+    "desconto": 0.75,
+    "unidade_medida": "unidade",
+    "quantidade": 10
+  },
+  {
+    "codigo": "COD005",
+    "produto": "Produto 5",
+    "valor_unitario": 40.00,
+    "desconto": ,
+    "unidade_medida": "kg",
+    "quantidade": 2
+  }
+]

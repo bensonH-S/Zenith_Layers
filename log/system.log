@@ -5,3 +5,128 @@
 2025-05-08 13:00:52,720 [INFO] Persona salva para empresa_id 18
 2025-05-08 13:05:42,696 [INFO] Persona salva para empresa_id 18
 2025-05-08 13:05:42,696 [INFO] Persona salva para empresa_id 18
+2025-05-09 01:47:44,669 [INFO] Renderizando página inicial
+2025-05-09 01:47:50,750 [INFO] Renderizando página inicial
+2025-05-09 01:47:52,821 [INFO] Renderizando página de login
+2025-05-09 01:47:55,618 [INFO] Usuário hauriovieira@gmail.com autenticado com sucesso
+2025-05-09 01:47:55,620 [INFO] Usuário hauriovieira@gmail.com autenticado com sucesso via /login-web
+2025-05-09 01:47:56,693 [INFO] Renderizando painel para usuário hauriovieira@gmail.com
+2025-05-09 01:47:58,400 [INFO] Renderizando página de treinamento de IA para usuário hauriovieira@gmail.com
+2025-05-09 01:47:59,447 [INFO] Empresa encontrada para usuario_id 16: empresa_id 11
+2025-05-09 01:47:59,455 [WARNING] Persona não encontrada para empresa_id 11
+2025-05-09 01:47:59,499 [INFO] Renderizando página de persona para usuário hauriovieira@gmail.com
+2025-05-09 01:51:55,077 [INFO] Renderizando página de treinamento de IA para usuário hauriovieira@gmail.com
+2025-05-09 01:51:56,516 [INFO] Empresa encontrada para usuario_id 16: empresa_id 11
+2025-05-09 01:51:56,548 [WARNING] Persona não encontrada para empresa_id 11
+2025-05-09 01:51:56,689 [INFO] Renderizando página de persona para usuário hauriovieira@gmail.com
+2025-05-09 01:55:27,769 [INFO] Renderizando página de treinamento de IA para usuário hauriovieira@gmail.com
+2025-05-09 01:55:28,595 [INFO] Empresa encontrada para usuario_id 16: empresa_id 11
+2025-05-09 01:55:28,600 [WARNING] Persona não encontrada para empresa_id 11
+2025-05-09 01:55:28,632 [INFO] Renderizando página de persona para usuário hauriovieira@gmail.com
+2025-05-09 01:55:29,500 [INFO] Tentando renderizar página de ações para usuário hauriovieira@gmail.com (ID: 16)
+2025-05-09 01:55:29,504 [INFO] Empresa encontrada para usuario_id 16: empresa_id 11
+2025-05-09 12:27:05,539 [INFO] Renderizando página de login
+2025-05-09 12:27:10,504 [ERROR] Erro ao autenticar usuário: 2003: Can't connect to MySQL server on 'localhost:3306' (Errno 10061: No connection could be made because the target machine actively refused it)
+2025-05-09 12:27:10,505 [WARNING] Falha na autenticação via /login-web para hauriovieira@gmail.com: e-mail ou senha incorretos
+2025-05-09 12:27:12,801 [ERROR] Erro ao autenticar usuário: 2003: Can't connect to MySQL server on 'localhost:3306' (Errno 10061: No connection could be made because the target machine actively refused it)
+2025-05-09 12:27:12,802 [WARNING] Falha na autenticação via /login-web para hauriovieira@gmail.com: e-mail ou senha incorretos
+2025-05-09 13:32:35,000 [INFO] Usuário hauriovieira@gmail.com autenticado com sucesso
+2025-05-09 13:32:35,002 [INFO] Usuário hauriovieira@gmail.com autenticado com sucesso via /login-web
+2025-05-09 13:32:36,044 [INFO] Renderizando painel para usuário hauriovieira@gmail.com
+2025-05-09 13:33:07,179 [INFO] Usuário hauriovieira@gmail.com fez logout
+2025-05-09 13:33:07,196 [INFO] Renderizando página de login
+2025-05-09 13:33:10,095 [INFO] Renderizando página de login
+2025-05-09 13:33:12,635 [INFO] Usuário hauriovieira@gmail.com autenticado com sucesso
+2025-05-09 13:33:12,635 [INFO] Usuário hauriovieira@gmail.com autenticado com sucesso via /login-web
+2025-05-09 13:33:13,668 [INFO] Renderizando painel para usuário hauriovieira@gmail.com
+2025-05-09 13:33:21,899 [INFO] Usuário hauriovieira@gmail.com fez logout
+2025-05-09 13:33:21,934 [INFO] Renderizando página de login
+2025-05-09 13:33:22,891 [INFO] Renderizando página de login
+2025-05-09 13:33:25,235 [INFO] Usuário hauriovieira@gmail.com autenticado com sucesso
+2025-05-09 13:33:25,235 [INFO] Usuário hauriovieira@gmail.com autenticado com sucesso via /login-web
+2025-05-09 13:33:26,271 [INFO] Renderizando painel para usuário hauriovieira@gmail.com
+2025-05-09 13:33:43,057 [INFO] Usuário hauriovieira@gmail.com fez logout
+2025-05-09 13:33:43,066 [INFO] Renderizando página de login
+2025-05-09 13:33:44,016 [INFO] Renderizando página de login
+2025-05-09 13:33:47,324 [INFO] Usuário hauriovieira@gmail.com autenticado com sucesso
+2025-05-09 13:33:47,325 [INFO] Usuário hauriovieira@gmail.com autenticado com sucesso via /login-web
+2025-05-09 13:33:48,362 [INFO] Renderizando painel para usuário hauriovieira@gmail.com
+2025-05-09 13:34:00,124 [INFO] Usuário hauriovieira@gmail.com fez logout
+2025-05-09 13:34:00,133 [INFO] Renderizando página de login
+2025-05-09 13:34:02,534 [INFO] Usuário hauriovieira@gmail.com autenticado com sucesso
+2025-05-09 13:34:02,535 [INFO] Usuário hauriovieira@gmail.com autenticado com sucesso via /login-web
+2025-05-09 13:34:03,573 [INFO] Renderizando painel para usuário hauriovieira@gmail.com
+2025-05-09 13:34:06,476 [INFO] Usuário hauriovieira@gmail.com fez logout
+2025-05-09 13:34:06,483 [INFO] Renderizando página de login
+2025-05-09 13:34:08,810 [INFO] Usuário hauriovieira@gmail.com autenticado com sucesso
+2025-05-09 13:34:08,811 [INFO] Usuário hauriovieira@gmail.com autenticado com sucesso via /login-web
+2025-05-09 13:34:09,843 [INFO] Renderizando painel para usuário hauriovieira@gmail.com
+2025-05-09 13:39:48,259 [INFO] Usuário hauriovieira@gmail.com fez logout
+2025-05-09 13:39:48,269 [INFO] Renderizando página de login
+2025-05-09 13:39:50,765 [INFO] Usuário hauriovieira@gmail.com autenticado com sucesso
+2025-05-09 13:39:50,765 [INFO] Usuário hauriovieira@gmail.com autenticado com sucesso via /login-web
+2025-05-09 13:39:51,802 [INFO] Renderizando painel para usuário hauriovieira@gmail.com
+2025-05-09 13:39:54,596 [INFO] Renderizando painel para usuário hauriovieira@gmail.com
+2025-05-09 13:39:55,378 [INFO] Usuário hauriovieira@gmail.com fez logout
+2025-05-09 13:39:55,387 [INFO] Renderizando página de login
+2025-05-09 13:39:58,394 [INFO] Renderizando página de login
+2025-05-09 13:40:00,907 [INFO] Usuário hauriovieira@gmail.com autenticado com sucesso
+2025-05-09 13:40:00,908 [INFO] Usuário hauriovieira@gmail.com autenticado com sucesso via /login-web
+2025-05-09 13:40:01,940 [INFO] Renderizando painel para usuário hauriovieira@gmail.com
+2025-05-09 13:44:53,450 [INFO] Usuário hauriovieira@gmail.com fez logout
+2025-05-09 13:44:53,461 [INFO] Renderizando página de login
+2025-05-09 13:44:54,623 [INFO] Renderizando página de login
+2025-05-09 13:44:56,899 [INFO] Usuário hauriovieira@gmail.com autenticado com sucesso
+2025-05-09 13:44:56,900 [INFO] Usuário hauriovieira@gmail.com autenticado com sucesso via /login-web
+2025-05-09 13:44:57,439 [INFO] Renderizando painel para usuário hauriovieira@gmail.com
+2025-05-09 13:44:59,388 [INFO] Usuário hauriovieira@gmail.com fez logout
+2025-05-09 13:44:59,395 [INFO] Renderizando página de login
+2025-05-09 13:45:02,147 [INFO] Usuário hauriovieira@gmail.com autenticado com sucesso
+2025-05-09 13:45:02,147 [INFO] Usuário hauriovieira@gmail.com autenticado com sucesso via /login-web
+2025-05-09 13:45:02,688 [INFO] Renderizando painel para usuário hauriovieira@gmail.com
+2025-05-09 13:45:07,527 [INFO] Usuário hauriovieira@gmail.com fez logout
+2025-05-09 13:45:07,533 [INFO] Renderizando página de login
+2025-05-09 13:45:11,778 [INFO] Usuário hauriovieira@gmail.com autenticado com sucesso
+2025-05-09 13:45:11,778 [INFO] Usuário hauriovieira@gmail.com autenticado com sucesso via /login-web
+2025-05-09 13:45:12,315 [INFO] Renderizando painel para usuário hauriovieira@gmail.com
+2025-05-09 13:47:40,615 [INFO] Usuário hauriovieira@gmail.com fez logout
+2025-05-09 13:47:40,622 [INFO] Renderizando página de login
+2025-05-09 13:47:44,054 [INFO] Usuário hauriovieira@gmail.com autenticado com sucesso
+2025-05-09 13:47:44,055 [INFO] Usuário hauriovieira@gmail.com autenticado com sucesso via /login-web
+2025-05-09 13:47:44,089 [INFO] Renderizando painel para usuário hauriovieira@gmail.com
+2025-05-09 13:47:47,885 [INFO] Usuário hauriovieira@gmail.com fez logout
+2025-05-09 13:47:47,892 [INFO] Renderizando página de login
+2025-05-09 13:47:50,575 [INFO] Usuário hauriovieira@gmail.com autenticado com sucesso
+2025-05-09 13:47:50,575 [INFO] Usuário hauriovieira@gmail.com autenticado com sucesso via /login-web
+2025-05-09 13:47:50,605 [INFO] Renderizando painel para usuário hauriovieira@gmail.com
+2025-05-09 13:47:52,580 [INFO] Usuário hauriovieira@gmail.com fez logout
+2025-05-09 13:47:52,588 [INFO] Renderizando página de login
+2025-05-09 13:47:56,225 [INFO] Usuário hauriovieira@gmail.com autenticado com sucesso
+2025-05-09 13:47:56,225 [INFO] Usuário hauriovieira@gmail.com autenticado com sucesso via /login-web
+2025-05-09 13:47:56,254 [INFO] Renderizando painel para usuário hauriovieira@gmail.com
+2025-05-09 13:48:04,458 [INFO] Usuário hauriovieira@gmail.com fez logout
+2025-05-09 13:48:04,465 [INFO] Renderizando página de login
+2025-05-09 13:48:07,445 [INFO] Usuário hauriovieira@gmail.com autenticado com sucesso
+2025-05-09 13:48:07,446 [INFO] Usuário hauriovieira@gmail.com autenticado com sucesso via /login-web
+2025-05-09 13:48:07,481 [INFO] Renderizando painel para usuário hauriovieira@gmail.com
+2025-05-09 14:00:53,800 [INFO] Usuário hauriovieira@gmail.com fez logout
+2025-05-09 14:00:53,807 [INFO] Renderizando página de login
+2025-05-09 14:00:57,138 [INFO] Usuário hauriovieira@gmail.com autenticado com sucesso
+2025-05-09 14:00:57,139 [INFO] Usuário hauriovieira@gmail.com autenticado com sucesso via /login-web
+2025-05-09 14:00:57,166 [INFO] Renderizando painel para usuário hauriovieira@gmail.com
+2025-05-09 15:26:12,081 [INFO] Usuário hauriovieira@gmail.com fez logout
+2025-05-09 15:26:12,094 [INFO] Renderizando página de login
+2025-05-09 15:26:14,632 [INFO] Usuário hauriovieira@gmail.com autenticado com sucesso
+2025-05-09 15:26:14,633 [INFO] Usuário hauriovieira@gmail.com autenticado com sucesso via /login-web
+2025-05-09 15:26:14,688 [INFO] Renderizando painel para usuário hauriovieira@gmail.com
+2025-05-09 15:26:29,284 [INFO] Renderizando página de treinamento de IA para usuário hauriovieira@gmail.com
+2025-05-09 15:26:39,567 [INFO] Empresa encontrada para usuario_id 16: empresa_id 11
+2025-05-09 15:26:39,578 [WARNING] Persona não encontrada para empresa_id 11
+2025-05-09 15:26:39,674 [INFO] Renderizando página de persona para usuário hauriovieira@gmail.com
+2025-05-09 15:27:05,909 [INFO] Renderizando página de treinamento de IA para usuário hauriovieira@gmail.com
+2025-05-09 15:27:07,194 [INFO] Empresa encontrada para usuario_id 16: empresa_id 11
+2025-05-09 15:27:07,197 [WARNING] Persona não encontrada para empresa_id 11
+2025-05-09 15:27:07,198 [INFO] Renderizando página de persona para usuário hauriovieira@gmail.com
+2025-05-09 15:27:07,890 [INFO] Tentando renderizar página de ações para usuário hauriovieira@gmail.com (ID: 16)
+2025-05-09 15:27:07,895 [INFO] Empresa encontrada para usuario_id 16: empresa_id 11
+2025-05-09 15:27:10,979 [INFO] Renderizando página de treinamento de IA para usuário hauriovieira@gmail.com
