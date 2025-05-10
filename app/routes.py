@@ -7,6 +7,9 @@ from app.models import Usuario, registrar_usuario, login_usuario, login_usuario_
 from database.connection import connect_db
 import logging
 from logging.handlers import RotatingFileHandler
+# Adiciona suporte para nomes de arquivo seguros e timestamp
+from werkzeug.utils import secure_filename
+import time
 
 # Configura logging
 log_dir = os.path.join(os.path.dirname(__file__), '..', 'log')
@@ -21,27 +24,34 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 logger.addHandler(log_handler)
 
+# Configura o blueprint da aplicação
 main = Blueprint('main', __name__)
 
+# Define a pasta de arquivos arquivados
 ARCHIVE_FOLDER = os.path.join(os.path.dirname(__file__), '..', 'static', 'archive')
 os.makedirs(ARCHIVE_FOLDER, exist_ok=True)
 
+# Define a pasta de uploads e formatos permitidos
+UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), '..', 'static', 'uploads')
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+ALLOWED_EXTENSIONS = {'xlsx', 'xls'}  # Apenas .xlsx e .xls são aceitos
+
+# Função para validar extensões de arquivo
+def allowed_file(filename):
+    # Verifica se o arquivo tem extensão e se está na lista permitida
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+# Função para chamar a API do DeepSeek
 def call_deepseek_api(message):
     api_key = os.getenv("DEEPSEEK_API_KEY")
     if not api_key:
         logger.error("Chave de API do DeepSeek não encontrada no .env")
         return "Erro: Chave de API do DeepSeek não encontrada no .env"
     endpoint = "https://api.deepseek.com/chat/completions"
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json"
-    }
+    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
     payload = {
         "model": "deepseek-chat",
-        "messages": [
-            {"role": "system", "content": "Você é um assistente prestativo."},
-            {"role": "user", "content": message}
-        ],
+        "messages": [{"role": "system", "content": "Você é um assistente prestativo."}, {"role": "user", "content": message}],
         "max_tokens": 150,
         "temperature": 0.7,
         "stream": False
@@ -53,6 +63,51 @@ def call_deepseek_api(message):
     except requests.RequestException as e:
         logger.error(f"Erro na API DeepSeek: {str(e)}")
         return f"Erro na API: {str(e)}"
+
+# Rota para upload de arquivos Excel
+@main.route('/upload_excel', methods=['POST'])
+@login_required
+def upload_excel():
+    # Verifica se um arquivo foi enviado
+    if 'file' not in request.files:
+        logger.error(f"Arquivo ausente na requisição /upload_excel para usuário {current_user.email}")
+        return jsonify({'success': False, 'message': 'Nenhum arquivo enviado'}), 400
+    
+    file = request.files['file']
+    # Verifica se o nome do arquivo está vazio
+    if file.filename == '':
+        logger.error(f"Nenhum arquivo selecionado na requisição /upload_excel para usuário {current_user.email}")
+        return jsonify({'success': False, 'message': 'Nenhum arquivo selecionado'}), 400
+    
+    # Valida o tipo de arquivo
+    if not allowed_file(file.filename):
+        logger.error(f"Formato de arquivo inválido na requisição /upload_excel para usuário {current_user.email}")
+        return jsonify({'success': False, 'message': 'Formato inválido, use .xlsx ou .xls'}), 400
+    
+    if file:
+        # Obtém o ID da empresa do usuário autenticado
+        empresa_id = get_empresa_id_by_usuario(current_user.id)
+        if not empresa_id:
+            logger.error(f"Empresa não encontrada para usuário {current_user.email}")
+            return jsonify({'success': False, 'message': 'Empresa não encontrada'}), 404
+        
+        # Gera um nome único com timestamp e ID da empresa
+        timestamp = str(int(time.time()))
+        filename = secure_filename(f"{empresa_id}_{timestamp}_{file.filename}")
+        file_path = os.path.join(UPLOAD_FOLDER, filename)
+        
+        # Verifica o tamanho do arquivo (máximo 10MB)
+        file.seek(0, os.SEEK_END)
+        file_size = file.tell()
+        if file_size > 10 * 1024 * 1024:  # 10MB
+            logger.error(f"Arquivo muito grande na requisição /upload_excel para usuário {current_user.email}")
+            return jsonify({'success': False, 'message': 'Arquivo excede 10MB'}), 400
+        file.seek(0)
+        
+        # Salva o arquivo no servidor
+        file.save(file_path)
+        logger.info(f"Arquivo {filename} salvo com sucesso para usuário {current_user.email}")
+        return jsonify({'success': True, 'message': 'Arquivo enviado com sucesso!', 'filename': filename}), 200
 
 @main.route('/registro', methods=['POST'])
 def registrar_usuario_route():
